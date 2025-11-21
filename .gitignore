@@ -1,0 +1,20 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Large CSVs/Datasets
+data/**/*.csv
+data/**/*.parquet
+data/**/*.npz
+
+# PyTorch compiled libs
+*.dll
+*.so
+*.dylib
+
+# OS / IDE files
+__pycache__/
+*.pt
+*.pth
+*.log
