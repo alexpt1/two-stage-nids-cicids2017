@@ -30,7 +30,7 @@ def train_vae_on_nsl_kdd(
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
     for epoch in range(1, num_epochs + 1):
-        beta = min(1.0, epoch / 10)
+        beta = min(0.1, epoch / 50)
         model.train()
         train_losses = []
         for (batch_x,) in tqdm(train_loader, desc=f"Epoch {epoch}/{num_epochs}"):

@@ -4,10 +4,9 @@ import torch.nn.functional as F
 
 
 class VAE(nn.Module):
-    def __init__(self, input_dim: int, latent_dim: int = 16, hidden_dims=(128, 64)):
+    def __init__(self, input_dim: int, latent_dim: int = 16, hidden_dims=(256, 128)):
         super().__init__()
 
-        
         encoder_layers = []
         last_dim = input_dim
         for h_dim in hidden_dims:
@@ -52,14 +51,8 @@ class VAE(nn.Module):
 
 
 def vae_loss_function(x_recon, x, mu, logvar, beta=1.0):
-    """
-    Standard VAE loss = reconstruction loss + KL divergence.
-    """
-    
-    recon_loss = F.mse_loss(x_recon, x, reduction="mean")
-    
+    recon_loss = F.l1_loss(x_recon, x, reduction="mean")
     kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     kl /= x.size(0)
-
     loss = recon_loss + beta * kl
     return loss, recon_loss, kl
