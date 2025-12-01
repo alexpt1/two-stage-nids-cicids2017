@@ -69,14 +69,12 @@ def plot_distribution(errors, labels):
 if __name__ == "__main__":
     device = "cuda" if (torch.cuda.is_available() and torch.cuda.device_count() > 0) else "cpu"
     print(f"Using : {device}")
-    
-    
+        
     df = load_nsl_kdd_raw("../data/nsl_kdd")
     train_loader, val_loader, test_loader, input_dim, preprocessor = preprocess_nsl_kdd(df)
 
     model = load_model("../models/vae_nsl_kdd.pt", device)
 
-    
     errors, labels = get_reconstruction_errors(model, test_loader, device)
 
     plot_distribution(errors, labels)

@@ -30,21 +30,20 @@ def train_vae_on_nsl_kdd(
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
     for epoch in range(1, num_epochs + 1):
+        beta = min(1.0, epoch / 10)
         model.train()
         train_losses = []
         for (batch_x,) in tqdm(train_loader, desc=f"Epoch {epoch}/{num_epochs}"):
             batch_x = batch_x.to(device)
-
             optimizer.zero_grad()
             x_recon, mu, logvar = model(batch_x)
-            loss, recon_loss, kl = vae_loss_function(x_recon, batch_x, mu, logvar)
+            loss, recon_loss, kl = vae_loss_function(x_recon, batch_x, mu, logvar, beta=beta)
             loss.backward()
             optimizer.step()
-
             train_losses.append(loss.item())
 
         avg_train_loss = sum(train_losses) / len(train_losses)
-        print(f"[Epoch {epoch}] Train loss: {avg_train_loss:.4f}")
+        print(f"[Epoch {epoch}] Train loss: {avg_train_loss:.4f} "f"(beta={beta:.3f})")
 
         
         model.eval()

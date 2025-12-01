@@ -51,17 +51,15 @@ class VAE(nn.Module):
         return x_recon, mu, logvar
 
 
-def vae_loss_function(x_recon, x, mu, logvar):
+def vae_loss_function(x_recon, x, mu, logvar, beta=1.0):
     """
     Standard VAE loss = reconstruction loss + KL divergence.
     """
     
     recon_loss = F.mse_loss(x_recon, x, reduction="mean")
-
     
-    
-    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
-    kl = kl.mean()
+    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    kl /= x.size(0)
 
-    loss = recon_loss + kl * 1e-3  
+    loss = recon_loss + beta * kl
     return loss, recon_loss, kl
