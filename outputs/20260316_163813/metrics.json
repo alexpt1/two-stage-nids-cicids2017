@@ -1,25 +1,26 @@
 {
   "model_path": "C:\\Users\\alexp\\OneDrive\\Documents\\vae-anomaly-detection\\outputs\\20260316_163813\\model.pt",
   "threshold_path": "C:\\Users\\alexp\\OneDrive\\Documents\\vae-anomaly-detection\\outputs\\20260316_163813\\threshold.json",
-  "threshold": 0.08289828300476061,
-  "threshold_method": "percentile",
+  "threshold": 0.0720779299736023,
+  "threshold_method": "roc_optimal",
   "threshold_percentile": 95.0,
-  "precision": 0.942198233562316,
-  "recall": 0.7481493025792878,
-  "f1": 0.8340355296877036,
-  "roc_auc": 0.950559624804958,
-  "pr_auc": 0.9554434183798612,
-  "alert_rate": 0.452005,
+  "threshold_k": 3.0,
+  "precision": 0.9356057029553394,
+  "recall": 0.7721499259721032,
+  "f1": 0.8460553278688525,
+  "roc_auc": 0.9502312659116607,
+  "pr_auc": 0.9548263282439564,
+  "alert_rate": 0.469792,
   "confusion_matrix": {
-    "tn": 9122,
-    "fp": 589,
-    "fn": 3232,
-    "tp": 9601
+    "tn": 9029,
+    "fp": 682,
+    "fn": 2924,
+    "tp": 9909
   },
-  "recall_at_fpr_1pct": 0.41751733811267827,
-  "recall_at_fpr_5pct": 0.7271097950596119,
-  "recall_at_fpr_10pct": 0.8158653471518741,
-  "fnr": 0.2518506974207122,
+  "recall_at_fpr_1pct": 0.4055949505181953,
+  "recall_at_fpr_5pct": 0.7320969375827944,
+  "recall_at_fpr_10pct": 0.8153978025403257,
+  "fnr": 0.22785007402789684,
   "scoring": "mse",
-  "evaluated_at": "2026-03-16T16:42:17.770590+00:00"
+  "evaluated_at": "2026-03-16T17:13:00.845850+00:00"
 }

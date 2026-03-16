@@ -1,6 +1,7 @@
 {
-  "method": "percentile",
+  "method": "roc_optimal",
   "percentile": 95.0,
-  "value": 0.08289828300476061,
-  "created_at": "2026-03-16T16:42:17.504557+00:00"
+  "k": 3.0,
+  "value": 0.0720779299736023,
+  "created_at": "2026-03-16T17:13:00.580805+00:00"
 }

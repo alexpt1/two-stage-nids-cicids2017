@@ -195,7 +195,7 @@ def evaluate_vae_nsl_kdd(
     else:
         normal_val_errors = val_errors[val_labels == 0]
         threshold = calibrate_threshold(
-            normal_val_errors,
+            val_errors if threshold_method == "roc_optimal" else normal_val_errors,
             method=threshold_method,
             percentile=threshold_percentile,
             k=threshold_k,
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--threshold-path", default=None)
     parser.add_argument("--reuse-threshold", action="store_true")
-    parser.add_argument("--threshold-method", default="percentile",choices=["percentile", "sigma", "roc_optimal"])
+    parser.add_argument("--threshold-method", default="roc_optimal",choices=["percentile", "sigma", "roc_optimal"])
     parser.add_argument("--threshold-k", type=float, default=3.0,help="k multiplier for sigma method (default 3.0 = mu+3sigma)")
     parser.add_argument("--threshold-percentile", type=float, default=95.0)
     parser.add_argument("--device", default=None)
