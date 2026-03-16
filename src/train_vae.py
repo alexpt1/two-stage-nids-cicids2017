@@ -149,7 +149,7 @@ if __name__ == "__main__":
     parser.add_argument("--data-dir", default="../data/nsl_kdd")
     parser.add_argument("--outputs-root", default="../outputs")
     parser.add_argument("--num-epochs", type=int, default=20)
-    parser.add_argument("--latent-dim", type=int, default=16)
+    parser.add_argument("--latent-dim", type=int, default=32)
     parser.add_argument("--device", default=None)
     parser.add_argument("--reshuffle-all", action="store_true")
 

@@ -1,0 +1,202 @@
+[
+  {
+    "epoch": 1,
+    "train_loss": 0.25445730564526364,
+    "recon_loss": 0.2401742477614417,
+    "kl_loss": 0.14283057723493012,
+    "kl_recon_ratio": 0.5946956368811018,
+    "beta": 0.1,
+    "val_recon_error_mean_normal": 0.08647596836090088,
+    "val_recon_error_mean_attack": 0.8100999593734741
+  },
+  {
+    "epoch": 2,
+    "train_loss": 0.13844647014882996,
+    "recon_loss": 0.1117344985044078,
+    "kl_loss": 0.13355985780556998,
+    "kl_recon_ratio": 1.195332324334021,
+    "beta": 0.2,
+    "val_recon_error_mean_normal": 0.053693294525146484,
+    "val_recon_error_mean_attack": 0.5807420611381531
+  },
+  {
+    "epoch": 3,
+    "train_loss": 0.12919731323414713,
+    "recon_loss": 0.09445478408774242,
+    "kl_loss": 0.11580842617066098,
+    "kl_recon_ratio": 1.2260726366499592,
+    "beta": 0.3,
+    "val_recon_error_mean_normal": 0.06436364352703094,
+    "val_recon_error_mean_attack": 0.6773416996002197
+  },
+  {
+    "epoch": 4,
+    "train_loss": 0.11905802635452416,
+    "recon_loss": 0.07713423411554425,
+    "kl_loss": 0.10480947842829338,
+    "kl_recon_ratio": 1.3587932729233123,
+    "beta": 0.4,
+    "val_recon_error_mean_normal": 0.06971728056669235,
+    "val_recon_error_mean_attack": 0.5224934220314026
+  },
+  {
+    "epoch": 5,
+    "train_loss": 0.1215660351049548,
+    "recon_loss": 0.07331573335210231,
+    "kl_loss": 0.09650060411872743,
+    "kl_recon_ratio": 1.3162332245287471,
+    "beta": 0.5,
+    "val_recon_error_mean_normal": 0.046242889016866684,
+    "val_recon_error_mean_attack": 0.5026036500930786
+  },
+  {
+    "epoch": 6,
+    "train_loss": 0.11481254780468558,
+    "recon_loss": 0.06061965349731566,
+    "kl_loss": 0.09032148751528454,
+    "kl_recon_ratio": 1.4899703694163169,
+    "beta": 0.6,
+    "val_recon_error_mean_normal": 0.05034922435879707,
+    "val_recon_error_mean_attack": 0.6179285049438477
+  },
+  {
+    "epoch": 7,
+    "train_loss": 0.1178088887331355,
+    "recon_loss": 0.05620908227116498,
+    "kl_loss": 0.08799972466904403,
+    "kl_recon_ratio": 1.5655783925543205,
+    "beta": 0.7,
+    "val_recon_error_mean_normal": 0.038138117641210556,
+    "val_recon_error_mean_attack": 0.48049283027648926
+  },
+  {
+    "epoch": 8,
+    "train_loss": 0.15345084843253284,
+    "recon_loss": 0.08471348528840622,
+    "kl_loss": 0.08592170146824438,
+    "kl_recon_ratio": 1.0142623830872357,
+    "beta": 0.8,
+    "val_recon_error_mean_normal": 0.045348912477493286,
+    "val_recon_error_mean_attack": 0.5056236386299133
+  },
+  {
+    "epoch": 9,
+    "train_loss": 0.14635721666400442,
+    "recon_loss": 0.07330196947330915,
+    "kl_loss": 0.08117249966422214,
+    "kl_recon_ratio": 1.1073713332324424,
+    "beta": 0.9,
+    "val_recon_error_mean_normal": 0.04505130276083946,
+    "val_recon_error_mean_attack": 0.5874100923538208
+  },
+  {
+    "epoch": 10,
+    "train_loss": 0.14619596758346518,
+    "recon_loss": 0.06665620636116351,
+    "kl_loss": 0.07953976088435338,
+    "kl_recon_ratio": 1.1932836449374702,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.03619004413485527,
+    "val_recon_error_mean_attack": 0.48975738883018494
+  },
+  {
+    "epoch": 11,
+    "train_loss": 0.14589970760078874,
+    "recon_loss": 0.06649366022728163,
+    "kl_loss": 0.0794060477664702,
+    "kl_recon_ratio": 1.1941897542570645,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.04754212871193886,
+    "val_recon_error_mean_attack": 0.6580599546432495
+  },
+  {
+    "epoch": 12,
+    "train_loss": 0.136480026607272,
+    "recon_loss": 0.058330731010575336,
+    "kl_loss": 0.07814929524302985,
+    "kl_recon_ratio": 1.3397619726188827,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.04229503124952316,
+    "val_recon_error_mean_attack": 0.4792728126049042
+  },
+  {
+    "epoch": 13,
+    "train_loss": 0.12675213857793607,
+    "recon_loss": 0.04806885755137552,
+    "kl_loss": 0.07868328096368644,
+    "kl_recon_ratio": 1.6368868529814866,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.036030448973178864,
+    "val_recon_error_mean_attack": 0.440920889377594
+  },
+  {
+    "epoch": 14,
+    "train_loss": 0.13420622723515024,
+    "recon_loss": 0.057169434233305325,
+    "kl_loss": 0.07703679290753376,
+    "kl_recon_ratio": 1.3475171468927056,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.043023668229579926,
+    "val_recon_error_mean_attack": 0.47882917523384094
+  },
+  {
+    "epoch": 15,
+    "train_loss": 0.11961473163044402,
+    "recon_loss": 0.042150991988458716,
+    "kl_loss": 0.07746373959482973,
+    "kl_recon_ratio": 1.8377678896866751,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.03603363409638405,
+    "val_recon_error_mean_attack": 0.39335131645202637
+  },
+  {
+    "epoch": 16,
+    "train_loss": 0.11400253658933479,
+    "recon_loss": 0.036824779451396394,
+    "kl_loss": 0.077177756886442,
+    "kl_recon_ratio": 2.0958104308080365,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.03487495705485344,
+    "val_recon_error_mean_attack": 0.35844066739082336
+  },
+  {
+    "epoch": 17,
+    "train_loss": 0.1595236702747486,
+    "recon_loss": 0.0819785816885751,
+    "kl_loss": 0.07754508918347741,
+    "kl_recon_ratio": 0.9459188923036033,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.033182982355356216,
+    "val_recon_error_mean_attack": 0.37776607275009155
+  },
+  {
+    "epoch": 18,
+    "train_loss": 0.13166272024062112,
+    "recon_loss": 0.05530047726341944,
+    "kl_loss": 0.07636224305579431,
+    "kl_recon_ratio": 1.3808604705534242,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.0327647440135479,
+    "val_recon_error_mean_attack": 0.3725643455982208
+  },
+  {
+    "epoch": 19,
+    "train_loss": 0.13388274072469036,
+    "recon_loss": 0.05781953411671934,
+    "kl_loss": 0.0760632072131342,
+    "kl_recon_ratio": 1.3155278466890905,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.03312457725405693,
+    "val_recon_error_mean_attack": 0.3298107087612152
+  },
+  {
+    "epoch": 20,
+    "train_loss": 0.1263678144930787,
+    "recon_loss": 0.04987136937111993,
+    "kl_loss": 0.07649644539703297,
+    "kl_recon_ratio": 1.5338749739912172,
+    "beta": 1.0,
+    "val_recon_error_mean_normal": 0.0365803986787796,
+    "val_recon_error_mean_attack": 0.3752313554286957
+  }
+]

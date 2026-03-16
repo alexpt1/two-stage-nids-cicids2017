@@ -52,7 +52,7 @@ class VAE(nn.Module):
 
 
 def vae_loss_function(x_recon, x, mu, logvar, beta=1.0):
-    recon_loss = F.l1_loss(x_recon, x, reduction="mean")
+    recon_loss = F.mse_loss(x_recon, x, reduction="mean")
     kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
     kl_free = torch.clamp(kl_per_dim, min=0.5)
     kl = kl_free.sum(dim=1).mean()

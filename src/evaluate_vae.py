@@ -1,7 +1,7 @@
 import json
 import torch
 import numpy as np
-from sklearn.metrics import precision_recall_fscore_support, roc_auc_score, average_precision_score, confusion_matrix
+from sklearn.metrics import precision_recall_fscore_support, roc_auc_score, roc_curve, average_precision_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 import sklearn
 from torch.serialization import add_safe_globals
@@ -14,6 +14,10 @@ from data_utils import load_nsl_kdd_raw
 from vae_model import VAE
 from thresholding import calibrate_threshold, save_threshold, load_threshold
 
+def recall_at_fpr(fpr_curve, tpr_curve, target_fpr):
+    idx = np.searchsorted(fpr_curve, target_fpr, side='right') - 1
+    idx = max(0, min(idx, len(tpr_curve) - 1))
+    return float(tpr_curve[idx])
 
 def _infer_hidden_dims_from_state_dict(state_dict):
     hidden_dims = []
@@ -216,8 +220,13 @@ def evaluate_vae_nsl_kdd(
     precision, recall, f1, _ = precision_recall_fscore_support(
         test_labels, y_pred, average="binary", pos_label=1
     )
+    fpr_curve, tpr_curve, _ = roc_curve(test_labels, test_errors)
     auc = roc_auc_score(test_labels, test_errors)
     pr_auc = average_precision_score(test_labels, test_errors)
+
+    recall_at_fpr_1pct  = recall_at_fpr(fpr_curve, tpr_curve, 0.01)
+    recall_at_fpr_5pct  = recall_at_fpr(fpr_curve, tpr_curve, 0.05)
+    recall_at_fpr_10pct = recall_at_fpr(fpr_curve, tpr_curve, 0.10)
 
     tn, fp, fn, tp = confusion_matrix(test_labels, y_pred).ravel()
     alert_rate = round(float((y_pred == 1).sum() / len(y_pred)), 6)
@@ -229,6 +238,9 @@ def evaluate_vae_nsl_kdd(
     print(f"Test PR-AUC:    {pr_auc:.4f}")
     print(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
     print(f"Alert Rate: {alert_rate:.6f}")
+    print(f"Recall at FPR 1%:  {recall_at_fpr_1pct:.4f}")
+    print(f"Recall at FPR 5%:  {recall_at_fpr_5pct:.4f}")
+    print(f"Recall at FPR 10%: {recall_at_fpr_10pct:.4f}")
 
     metrics_payload = {
         "model_path": str(resolved_model_path),
@@ -248,6 +260,9 @@ def evaluate_vae_nsl_kdd(
             "fn": int(fn),
             "tp": int(tp),
         },
+        "recall_at_fpr_1pct":  recall_at_fpr_1pct,
+        "recall_at_fpr_5pct":  recall_at_fpr_5pct,
+        "recall_at_fpr_10pct": recall_at_fpr_10pct,
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
     }
     metrics_path = resolved_run_dir / "metrics.json"
@@ -255,7 +270,6 @@ def evaluate_vae_nsl_kdd(
     with metrics_path.open("w", encoding="utf-8") as f:
         json.dump(metrics_payload, f, indent=2)
     print(f"Metrics saved to {metrics_path}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate VAE on NSL-KDD.")
