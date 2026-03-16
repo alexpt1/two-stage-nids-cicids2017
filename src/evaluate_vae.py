@@ -1,7 +1,7 @@
 import json
 import torch
 import numpy as np
-from sklearn.metrics import precision_recall_fscore_support, roc_auc_score, average_precision_score
+from sklearn.metrics import precision_recall_fscore_support, roc_auc_score, average_precision_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 import sklearn
 from torch.serialization import add_safe_globals
@@ -219,11 +219,16 @@ def evaluate_vae_nsl_kdd(
     auc = roc_auc_score(test_labels, test_errors)
     pr_auc = average_precision_score(test_labels, test_errors)
 
+    tn, fp, fn, tp = confusion_matrix(test_labels, y_pred).ravel()
+    alert_rate = round(float((y_pred == 1).sum() / len(y_pred)), 6)
+
     print(f"Test Precision: {precision:.4f}")
     print(f"Test Recall:    {recall:.4f}")
     print(f"Test F1-score:  {f1:.4f}")
     print(f"Test ROC-AUC:   {auc:.4f}")
     print(f"Test PR-AUC:    {pr_auc:.4f}")
+    print(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
+    print(f"Alert Rate: {alert_rate:.6f}")
 
     metrics_payload = {
         "model_path": str(resolved_model_path),
@@ -236,6 +241,13 @@ def evaluate_vae_nsl_kdd(
         "f1": float(f1),
         "roc_auc": float(auc),
         "pr_auc": float(pr_auc),
+        "alert_rate": alert_rate,
+        "confusion_matrix": {
+            "tn": int(tn),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tp": int(tp),
+        },
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
     }
     metrics_path = resolved_run_dir / "metrics.json"

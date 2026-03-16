@@ -32,10 +32,11 @@ class VAE(nn.Module):
     def encode(self, x):
         h = self.encoder(x)
         mu = self.fc_mu(h)
-        logvar = self.fc_logvar(h)
+        logvar = torch.clamp(self.fc_logvar(h), min=-4.0, max=4.0)
         return mu, logvar
 
     def reparameterize(self, mu, logvar):
+        logvar = torch.clamp(logvar, min=-4.0, max=4.0)
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + eps * std
@@ -52,7 +53,9 @@ class VAE(nn.Module):
 
 def vae_loss_function(x_recon, x, mu, logvar, beta=1.0):
     recon_loss = F.l1_loss(x_recon, x, reduction="mean")
-    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
+    kl_free = torch.clamp(kl_per_dim, min=0.5)
+    kl = kl_free.sum(dim=1).mean()
     kl /= x.size(0)
     loss = recon_loss + beta * kl
     return loss, recon_loss, kl

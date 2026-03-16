@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from torch import optim
 from tqdm import tqdm
-
+import argparse
 from data_utils import load_nsl_kdd_raw, preprocess_nsl_kdd
 from vae_model import VAE, vae_loss_function
 
@@ -46,9 +46,11 @@ def train_vae_on_nsl_kdd(
     epoch_logs = []
 
     for epoch in range(1, num_epochs + 1):
-        beta = min(0.1, epoch / 50)
+        beta = min(1.0, epoch / 10)
         model.train()
         train_losses = []
+        recon_losses = []
+        kl_losses = []
         for (batch_x,) in tqdm(train_loader, desc=f"Epoch {epoch}/{num_epochs}"):
             batch_x = batch_x.to(device)
             optimizer.zero_grad()
@@ -57,9 +59,17 @@ def train_vae_on_nsl_kdd(
             loss.backward()
             optimizer.step()
             train_losses.append(loss.item())
+            recon_losses.append(recon_loss.item())
+            kl_losses.append(kl.item())
 
         avg_train_loss = sum(train_losses) / len(train_losses)
-        print(f"[Epoch {epoch}] Train loss: {avg_train_loss:.4f} " f"(beta={beta:.3f})")
+        avg_recon_loss = sum(recon_losses) / len(recon_losses)
+        avg_kl_loss = sum(kl_losses) / len(kl_losses)
+        kl_recon_ratio = avg_kl_loss / avg_recon_loss if avg_recon_loss != 0 else 0.0
+        print(
+            f"[Epoch {epoch}] Train loss: {avg_train_loss:.4f} "
+            f"(beta={beta:.3f}, kl/recon={kl_recon_ratio:.4f})"
+        )
 
         model.eval()
         recon_errors = []
@@ -91,6 +101,9 @@ def train_vae_on_nsl_kdd(
             {
                 "epoch": epoch,
                 "train_loss": float(avg_train_loss),
+                "recon_loss": float(avg_recon_loss),
+                "kl_loss": float(avg_kl_loss),
+                "kl_recon_ratio": float(kl_recon_ratio),
                 "beta": float(beta),
                 "val_recon_error_mean_normal": normal_mean,
                 "val_recon_error_mean_attack": attack_mean,
@@ -131,4 +144,22 @@ def train_vae_on_nsl_kdd(
 
 
 if __name__ == "__main__":
-    train_vae_on_nsl_kdd()
+    parser = argparse.ArgumentParser(description="Train VAE on NSL-KDD.")
+
+    parser.add_argument("--data-dir", default="../data/nsl_kdd")
+    parser.add_argument("--outputs-root", default="../outputs")
+    parser.add_argument("--num-epochs", type=int, default=20)
+    parser.add_argument("--latent-dim", type=int, default=16)
+    parser.add_argument("--device", default=None)
+    parser.add_argument("--reshuffle-all", action="store_true")
+
+    args = parser.parse_args()
+
+    train_vae_on_nsl_kdd(
+        data_dir=args.data_dir,
+        outputs_root=args.outputs_root,
+        num_epochs=args.num_epochs,
+        latent_dim=args.latent_dim,
+        device=args.device,
+        reshuffle_all=args.reshuffle_all,
+    )

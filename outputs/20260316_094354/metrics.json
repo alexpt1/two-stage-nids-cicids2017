@@ -1,0 +1,20 @@
+{
+  "model_path": "C:\\Users\\alexp\\OneDrive\\Documents\\vae-anomaly-detection\\outputs\\20260316_094354\\model.pt",
+  "threshold_path": "C:\\Users\\alexp\\OneDrive\\Documents\\vae-anomaly-detection\\outputs\\20260316_094354\\threshold.json",
+  "threshold": 0.8831986367702467,
+  "threshold_method": "percentile",
+  "threshold_percentile": 95.0,
+  "precision": 0.9685370989718816,
+  "recall": 0.6092885529494273,
+  "f1": 0.7480149239452789,
+  "roc_auc": 0.9354267136580056,
+  "pr_auc": 0.9427377580874238,
+  "alert_rate": 0.3581,
+  "confusion_matrix": {
+    "tn": 9457,
+    "fp": 254,
+    "fn": 5014,
+    "tp": 7819
+  },
+  "evaluated_at": "2026-03-16T09:44:56.753143+00:00"
+}
