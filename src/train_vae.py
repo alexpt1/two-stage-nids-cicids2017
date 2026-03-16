@@ -15,6 +15,7 @@ def train_vae_on_nsl_kdd(
     run_id: str | None = None,
     num_epochs: int = 20,
     latent_dim: int = 16,
+    hidden_dims: tuple = (256, 128),
     device: str | None = None,
     reshuffle_all: bool = False,
 ):
@@ -32,7 +33,7 @@ def train_vae_on_nsl_kdd(
         reshuffle_all=reshuffle_all,
     )
 
-    model = VAE(input_dim=input_dim, latent_dim=latent_dim)
+    model = VAE(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims)
     model.to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -115,6 +116,7 @@ def train_vae_on_nsl_kdd(
             "model_state_dict": model.state_dict(),
             "input_dim": input_dim,
             "latent_dim": latent_dim,
+            "hidden_dims": list(hidden_dims),
             "preprocessor": preprocessor,
         },
         model_save_path,
@@ -127,6 +129,7 @@ def train_vae_on_nsl_kdd(
                 "data_dir": str(data_dir),
                 "num_epochs": num_epochs,
                 "latent_dim": latent_dim,
+                "hidden_dims": list(hidden_dims),
                 "device": device,
                 "reshuffle_all": reshuffle_all,
                 "input_dim": int(input_dim),
@@ -146,10 +149,11 @@ def train_vae_on_nsl_kdd(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train VAE on NSL-KDD.")
 
-    parser.add_argument("--data-dir", default="../data/nsl_kdd")
-    parser.add_argument("--outputs-root", default="../outputs")
+    parser.add_argument("--data-dir", default="data/nsl_kdd")
+    parser.add_argument("--outputs-root", default="outputs")
     parser.add_argument("--num-epochs", type=int, default=20)
     parser.add_argument("--latent-dim", type=int, default=32)
+    parser.add_argument("--hidden-dims", nargs="+", type=int, default=[128, 64])
     parser.add_argument("--device", default=None)
     parser.add_argument("--reshuffle-all", action="store_true")
 
@@ -160,6 +164,7 @@ if __name__ == "__main__":
         outputs_root=args.outputs_root,
         num_epochs=args.num_epochs,
         latent_dim=args.latent_dim,
+        hidden_dims=tuple(args.hidden_dims),
         device=args.device,
         reshuffle_all=args.reshuffle_all,
     )

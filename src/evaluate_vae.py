@@ -19,6 +19,13 @@ def recall_at_fpr(fpr_curve, tpr_curve, target_fpr):
     idx = max(0, min(idx, len(tpr_curve) - 1))
     return float(tpr_curve[idx])
 
+def compute_anomaly_scores(x, x_recon, mu, logvar, scoring: str, beta: float = 1.0):
+    recon = ((x_recon - x) ** 2).mean(dim=1)
+    if scoring == "mse":
+        return recon.cpu().numpy()
+    kl_per_sample = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp()).sum(dim=1)
+    return (recon + beta * kl_per_sample).cpu().numpy()
+
 def _infer_hidden_dims_from_state_dict(state_dict):
     hidden_dims = []
     layer_idx = 0
@@ -108,9 +115,11 @@ def evaluate_vae_nsl_kdd(
     threshold_path: str | None = None,
     reuse_threshold: bool = False,
     threshold_method: str = "percentile",
+    threshold_k: float = 3.0,
     threshold_percentile: float = 95,
     device: str | None = None,
     reshuffle_all: bool = False,
+    scoring: str = "mse",
 ):
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -129,6 +138,7 @@ def evaluate_vae_nsl_kdd(
     state_dict = checkpoint["model_state_dict"]
 
     checkpoint_preprocessor = checkpoint.get("preprocessor")
+    beta_score = float(checkpoint.get("beta", 1.0))
     if checkpoint_preprocessor is None:
         raise ValueError(
             "Checkpoint does not contain 'preprocessor'. "
@@ -162,7 +172,7 @@ def evaluate_vae_nsl_kdd(
         for x_val, y_val in val_loader:
             x_val = x_val.to(device)
             x_recon, mu, logvar = model(x_val)
-            err = ((x_recon - x_val) ** 2).mean(dim=1).cpu().numpy()
+            err = compute_anomaly_scores(x_val, x_recon, mu, logvar, scoring=scoring, beta=beta_score)
             val_errors.extend(err)
             val_labels.extend(y_val.numpy())
 
@@ -188,10 +198,13 @@ def evaluate_vae_nsl_kdd(
             normal_val_errors,
             method=threshold_method,
             percentile=threshold_percentile,
+            k=threshold_k,
+            val_labels=val_labels if threshold_method == "roc_optimal" else None,
         )
         threshold_payload = {
             "method": threshold_method,
             "percentile": threshold_percentile,
+            "k": threshold_k,
             "value": threshold,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -208,7 +221,7 @@ def evaluate_vae_nsl_kdd(
         for x_test, y_test in test_loader:
             x_test = x_test.to(device)
             x_recon, mu, logvar = model(x_test)
-            err = ((x_recon - x_test) ** 2).mean(dim=1).cpu().numpy()
+            err = compute_anomaly_scores(x_test, x_recon, mu, logvar, scoring=scoring, beta=beta_score)
             test_errors.extend(err)
             test_labels.extend(y_test.numpy())
 
@@ -236,12 +249,14 @@ def evaluate_vae_nsl_kdd(
     print(f"Test F1-score:  {f1:.4f}")
     print(f"Test ROC-AUC:   {auc:.4f}")
     print(f"Test PR-AUC:    {pr_auc:.4f}")
-    print(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
+    #print(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
     print(f"Alert Rate: {alert_rate:.6f}")
-    print(f"Recall at FPR 1%:  {recall_at_fpr_1pct:.4f}")
+    #print(f"Recall at FPR 1%:  {recall_at_fpr_1pct:.4f}")
     print(f"Recall at FPR 5%:  {recall_at_fpr_5pct:.4f}")
-    print(f"Recall at FPR 10%: {recall_at_fpr_10pct:.4f}")
+    #print(f"Recall at FPR 10%: {recall_at_fpr_10pct:.4f}")
     print(f"FNR (at p95 threshold): {fn / (fn + tp):.4f}")
+    #print(f"Scoring method: {scoring}")
+    print(f"Threshold method: {threshold_method} | value: {threshold:.6f}")
 
     metrics_payload = {
         "model_path": str(resolved_model_path),
@@ -249,6 +264,7 @@ def evaluate_vae_nsl_kdd(
         "threshold": float(threshold),
         "threshold_method": threshold_method,
         "threshold_percentile": float(threshold_percentile),
+        "threshold_k": float(threshold_k),
         "precision": float(precision),
         "recall": float(recall),
         "f1": float(f1),
@@ -265,6 +281,7 @@ def evaluate_vae_nsl_kdd(
         "recall_at_fpr_5pct":  recall_at_fpr_5pct,
         "recall_at_fpr_10pct": recall_at_fpr_10pct,
         "fnr": float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0,
+        "scoring": scoring,
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
     }
     metrics_path = resolved_run_dir / "metrics.json"
@@ -275,15 +292,17 @@ def evaluate_vae_nsl_kdd(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate VAE on NSL-KDD.")
-    parser.add_argument("--data-dir", default="../data/nsl_kdd")
-    parser.add_argument("--run-dir", default="../outputs/default")
+    parser.add_argument("--data-dir", default="data/nsl_kdd")
+    parser.add_argument("--run-dir", default="outputs/default")
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--threshold-path", default=None)
     parser.add_argument("--reuse-threshold", action="store_true")
-    parser.add_argument("--threshold-method", default="percentile")
+    parser.add_argument("--threshold-method", default="percentile",choices=["percentile", "sigma", "roc_optimal"])
+    parser.add_argument("--threshold-k", type=float, default=3.0,help="k multiplier for sigma method (default 3.0 = mu+3sigma)")
     parser.add_argument("--threshold-percentile", type=float, default=95.0)
     parser.add_argument("--device", default=None)
     parser.add_argument("--reshuffle-all", action="store_true")
+    parser.add_argument("--scoring",choices=["mse", "elbo"],default="mse",)
     args = parser.parse_args()
 
     evaluate_vae_nsl_kdd(
@@ -294,6 +313,8 @@ if __name__ == "__main__":
         reuse_threshold=args.reuse_threshold,
         threshold_method=args.threshold_method,
         threshold_percentile=args.threshold_percentile,
+        threshold_k=args.threshold_k,
         device=args.device,
         reshuffle_all=args.reshuffle_all,
+        scoring=args.scoring,
     )
