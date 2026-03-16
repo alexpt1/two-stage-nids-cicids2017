@@ -241,6 +241,7 @@ def evaluate_vae_nsl_kdd(
     print(f"Recall at FPR 1%:  {recall_at_fpr_1pct:.4f}")
     print(f"Recall at FPR 5%:  {recall_at_fpr_5pct:.4f}")
     print(f"Recall at FPR 10%: {recall_at_fpr_10pct:.4f}")
+    print(f"FNR (at p95 threshold): {fn / (fn + tp):.4f}")
 
     metrics_payload = {
         "model_path": str(resolved_model_path),
@@ -263,6 +264,7 @@ def evaluate_vae_nsl_kdd(
         "recall_at_fpr_1pct":  recall_at_fpr_1pct,
         "recall_at_fpr_5pct":  recall_at_fpr_5pct,
         "recall_at_fpr_10pct": recall_at_fpr_10pct,
+        "fnr": float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0,
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
     }
     metrics_path = resolved_run_dir / "metrics.json"
