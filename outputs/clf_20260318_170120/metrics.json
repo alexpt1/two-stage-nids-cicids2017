@@ -1,0 +1,47 @@
+{
+  "clf_run_dir": "C:\\Users\\alexp\\OneDrive\\Documents\\vae-anomaly-detection\\outputs\\clf_20260318_170120",
+  "confidence_threshold": 0.4,
+  "macro_f1": 0.7104091761072281,
+  "novel_anomaly_rate": 0.030580798103516396,
+  "per_class_recall": {
+    "DoS": 0.8711755233494364,
+    "Probe": 0.9281288723667905,
+    "R2L": 0.46675246675246673,
+    "U2R": 0.578125
+  },
+  "confusion_matrix": [
+    [
+      6492,
+      958,
+      1,
+      1
+    ],
+    [
+      174,
+      2247,
+      0,
+      0
+    ],
+    [
+      74,
+      1154,
+      1088,
+      15
+    ],
+    [
+      0,
+      2,
+      25,
+      37
+    ]
+  ],
+  "class_names": [
+    "DoS",
+    "Probe",
+    "R2L",
+    "U2R"
+  ],
+  "n_test_samples": 12655,
+  "n_novel": 387,
+  "evaluated_at": "2026-03-18T17:06:10.553791+00:00"
+}

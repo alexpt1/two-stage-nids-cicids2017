@@ -38,7 +38,7 @@ def train_vae_on_nsl_kdd(
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     if run_id is None:
-        run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        run_id = "vae_" + datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_dir = Path(outputs_root) / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     model_save_path = run_dir / "model.pt"
