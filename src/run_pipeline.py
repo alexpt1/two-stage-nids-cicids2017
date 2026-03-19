@@ -68,7 +68,8 @@ def run_pipeline(
 
     clf_run_path = Path(clf_run_dir)
     with (clf_run_path / "model.pkl").open("rb") as f:
-        clf = pickle.load(f)
+        payload = pickle.load(f)
+    clf = payload["clf"] if isinstance(payload, dict) else payload
     with (clf_run_path / "label_encoder.pkl").open("rb") as f:
         le = pickle.load(f)
     print(f"Classifier classes    : {list(le.classes_)}")

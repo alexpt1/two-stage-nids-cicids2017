@@ -51,7 +51,9 @@ def evaluate_classifier(
         raise ValueError("VAE checkpoint does not contain a preprocessor.")
 
     with model_path.open("rb") as f:
-        clf = pickle.load(f)
+        payload = pickle.load(f)
+        clf = payload["clf"] if isinstance(payload, dict) else payload
+        selector = payload.get("selector") if isinstance(payload, dict) else None
 
     with le_path.open("rb") as f:
         le = pickle.load(f)
