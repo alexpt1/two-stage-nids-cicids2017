@@ -3,6 +3,7 @@ import pickle
 import argparse
 from pathlib import Path
 
+import time
 import numpy as np
 import sklearn
 import torch
@@ -90,9 +91,11 @@ def run_pipeline(
     X_np   = X_proc.toarray() if hasattr(X_proc, "toarray") else X_proc
     X_tensor = torch.tensor(X_np, dtype=torch.float32).to(device)
 
+    t_start = time.perf_counter()
     with torch.no_grad():
         x_recon, mu, logvar = vae(X_tensor)
         recon_errors = ((x_recon - X_tensor) ** 2).mean(dim=1).cpu().numpy()
+    t_vae = time.perf_counter() - t_start
 
     anomaly_mask = recon_errors > threshold
     n_normal  = int((~anomaly_mask).sum())
@@ -102,9 +105,12 @@ def run_pipeline(
 
     verdicts = np.array(["normal"] * len(df_sample), dtype=object)
 
+    t_clf = 0.0
     if n_anomaly > 0:
         X_anomaly = X_np[anomaly_mask]
+        t_clf_start = time.perf_counter()
         proba     = clf.predict_proba(X_anomaly)
+        t_clf = time.perf_counter() - t_clf_start
         pred_idx  = np.argmax(proba, axis=1)
         confidence = proba[np.arange(len(proba)), pred_idx]
 
@@ -122,6 +128,18 @@ def run_pipeline(
     y_pred_binary = (verdicts != "normal").astype(int)
     correct = (y_true_binary == y_pred_binary).sum()
     print(f"\nBinary accuracy (normal vs attack): {correct/len(verdicts):.4f}")
+
+    n_total = len(df_sample)
+    t_total = t_vae + t_clf
+    vae_us  = (t_vae / n_total) * 1e6
+    clf_us  = (t_clf / n_anomaly) * 1e6 if n_anomaly > 0 else 0.0
+    total_us = (t_total / n_total) * 1e6
+
+    print(f"\nLatency (per sample):")
+    print(f"  VAE inference      : {vae_us:.2f} us/sample")
+    print(f"  RF inference       : {clf_us:.2f} us/sample (anomalies only)")
+    print(f"  Total pipeline     : {total_us:.2f} us/sample")
+    print(f"  Throughput         : {1e6/total_us:,.0f} samples/sec")
 
     return verdicts
 

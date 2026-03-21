@@ -243,20 +243,34 @@ def evaluate_vae_nsl_kdd(
 
     tn, fp, fn, tp = confusion_matrix(test_labels, y_pred).ravel()
     alert_rate = round(float((y_pred == 1).sum() / len(y_pred)), 6)
+    
+    unseen_mask = np.array([
+        label not in df_train["label"].values
+        for label in df_test["label"].values
+    ])
+    if unseen_mask.sum() > 0:
+        novelty_recall = float(y_pred[unseen_mask].mean())
+    else:
+        novelty_recall = None
 
     print(f"Test Precision: {precision:.4f}")
     print(f"Test Recall:    {recall:.4f}")
     print(f"Test F1-score:  {f1:.4f}")
     print(f"Test ROC-AUC:   {auc:.4f}")
     print(f"Test PR-AUC:    {pr_auc:.4f}")
-    #print(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
+    print(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
     print(f"Alert Rate: {alert_rate:.6f}")
     #print(f"Recall at FPR 1%:  {recall_at_fpr_1pct:.4f}")
     print(f"Recall at FPR 5%:  {recall_at_fpr_5pct:.4f}")
     #print(f"Recall at FPR 10%: {recall_at_fpr_10pct:.4f}")
-    print(f"FNR (at p95 threshold): {fn / (fn + tp):.4f}")
+    print(f"FNR: {fn / (fn + tp):.4f}")
+    print(f"FPR (alert fatigue score): {tp / (tp + fp):.4f}")
     #print(f"Scoring method: {scoring}")
     print(f"Threshold method: {threshold_method} | value: {threshold:.6f}")
+    
+    if novelty_recall is not None:
+        print(f"Novelty-Recall (unseen attack types): {novelty_recall:.4f}  "
+              f"(n={unseen_mask.sum()})")
 
     metrics_payload = {
         "model_path": str(resolved_model_path),
@@ -281,6 +295,9 @@ def evaluate_vae_nsl_kdd(
         "recall_at_fpr_5pct":  recall_at_fpr_5pct,
         "recall_at_fpr_10pct": recall_at_fpr_10pct,
         "fnr": float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0,
+        "tpr": float(tp / (tp + fp)) if (tp + fp) > 0 else 0.0,
+        "novelty_recall": novelty_recall,
+        "n_unseen_attacks": int(unseen_mask.sum()),
         "scoring": scoring,
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
     }

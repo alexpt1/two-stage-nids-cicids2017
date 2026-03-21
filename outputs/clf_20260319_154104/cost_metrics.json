@@ -1,0 +1,18 @@
+{
+  "total_cost": 10585.0,
+  "fn_cost": 9950.0,
+  "fp_cost": 635.0,
+  "attack_costs": {
+    "DoS": 10,
+    "Probe": 5,
+    "R2L": 20,
+    "U2R": 50
+  },
+  "fp_unit_cost": 1.0,
+  "per_class_fn_cost": {
+    "DoS": 3000,
+    "Probe": 830,
+    "R2L": 6020,
+    "U2R": 100
+  }
+}
