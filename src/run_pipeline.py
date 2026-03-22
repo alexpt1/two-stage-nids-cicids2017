@@ -35,6 +35,7 @@ def run_pipeline(
     random_state: int = 42,
     device: str | None = None,
     n_samples: int = 2000,
+    recalibrate: bool = False,
 ):
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -62,6 +63,18 @@ def run_pipeline(
     vae = VAE(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims)
     vae.load_state_dict(state_dict)
     vae.to(device).eval()
+
+    if recalibrate:
+        print("Recalibrating threshold on recent traffic window...")
+        from recalibrate_threshold import recalibrate_threshold as do_recalibrate
+        do_recalibrate(
+            data_dir=data_dir,
+            vae_run_dir=vae_run_dir,
+            method="percentile",
+            percentile=95.0,
+            window_size=5000,
+            device=device,
+        )
 
     threshold_payload = load_threshold(threshold_path)
     threshold = float(threshold_payload["value"])
@@ -153,6 +166,7 @@ if __name__ == "__main__":
     parser.add_argument("--device",               default=None)
     parser.add_argument("--n-samples",            type=int,   default=2000)
     parser.add_argument("--random-state",         type=int,   default=42)
+    parser.add_argument("--recalibrate", action="store_true", help="Recalibrate threshold before running pipeline")
     args = parser.parse_args()
 
     run_pipeline(
@@ -163,4 +177,5 @@ if __name__ == "__main__":
         device=args.device,
         n_samples=args.n_samples,
         random_state=args.random_state,
+        recalibrate=args.recalibrate,
     )
