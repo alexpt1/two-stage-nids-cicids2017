@@ -1,0 +1,14 @@
+{
+  "run_id": "vae_20260402_001220",
+  "created_at": "2026-04-02T00:16:52.198987+00:00",
+  "data_dir": "data/cicids2017",
+  "num_epochs": 20,
+  "latent_dim": 32,
+  "hidden_dims": [
+    256,
+    128
+  ],
+  "device": "cpu",
+  "input_dim": 77,
+  "dataset": "cicids2017"
+}

@@ -1,0 +1,25 @@
+{
+  "model_path": "outputs\\vae_20260405_213312\\model.pt",
+  "threshold_path": "outputs\\vae_20260405_213312\\threshold.json",
+  "threshold": 0.23202513992786425,
+  "threshold_method": "percentile",
+  "precision": 0.8870703764320785,
+  "recall": 0.24833125207751255,
+  "f1": 0.388034140041552,
+  "roc_auc": 0.9028304646244855,
+  "pr_auc": 0.7521035468069449,
+  "alert_rate": 0.067789,
+  "confusion_matrix": {
+    "tn": 344849,
+    "fp": 3519,
+    "fn": 83669,
+    "tp": 27642
+  },
+  "recall_at_fpr_1pct": 0.24203358158672547,
+  "recall_at_fpr_5pct": 0.5891511171402647,
+  "recall_at_fpr_10pct": 0.7581460951747806,
+  "fnr": 0.7516687479224874,
+  "tpr": 0.8870703764320785,
+  "scoring": "mse",
+  "evaluated_at": "2026-04-06T23:03:25.566241+00:00"
+}

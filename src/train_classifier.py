@@ -5,24 +5,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-import sklearn
 import torch
-from torch.serialization import add_safe_globals
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 
-from data_utils import load_nsl_kdd_raw
+from data_utils import load_cicids2017_raw
 from data_utils_stage2 import load_stage2_data
 
 
 def train_classifier(
-    data_dir: str = "data/nsl_kdd",
+    data_dir: str = "data/cicids2017",
     vae_run_dir: str = "outputs/default",
     outputs_root: str = "outputs",
     model_type: str = "rf",
     n_estimators: int = 200,
     random_state: int = 42,
-    val_size: float = 0.2,
+    val_size: float = 0.1,
+    test_size: float = 0.2,
 ):
     run_id = "clf_" + datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_dir = Path(outputs_root) / run_id
@@ -31,28 +30,30 @@ def train_classifier(
     vae_model_path = Path(vae_run_dir) / "model.pt"
     print(f"Loading VAE checkpoint from: {vae_model_path}")
 
-    add_safe_globals([
-        sklearn.compose.ColumnTransformer,
-        sklearn.preprocessing.OneHotEncoder,
-        sklearn.preprocessing.StandardScaler,
-    ])
-
     device = "cuda" if torch.cuda.is_available() else "cpu"
     checkpoint = torch.load(vae_model_path, map_location=device, weights_only=False)
-    preprocessor = checkpoint.get("preprocessor")
-    if preprocessor is None:
-        raise ValueError("VAE checkpoint does not contain a preprocessor.")
 
-    print("Loading NSL-KDD raw data...")
-    df_train, df_test = load_nsl_kdd_raw(data_dir)
+    scaler       = checkpoint.get("scaler")
+    feature_meta = checkpoint.get("feature_meta")
+    if scaler is None or feature_meta is None:
+        raise ValueError(
+            "VAE checkpoint missing 'scaler' or 'feature_meta'. "
+            "Retrain the VAE with the current train_vae.py."
+        )
+
+    print("Loading CICIDS2017 attack data...")
+    _df_monday, df_attacks = load_cicids2017_raw(data_dir)
 
     X_train, y_train, X_val, y_val, X_test, y_test, le = load_stage2_data(
-        df_train, df_test, preprocessor,
+        df_attacks,
+        scaler=scaler,
+        feature_meta=feature_meta,
         val_size=val_size,
+        test_size=test_size,
         random_state=random_state,
     )
-    
-    print(f"\nTraining {model_type.upper()} classifier...")
+
+    print(f"\nTraining {model_type.upper()} classifier with class_weight='balanced'...")
 
     if model_type == "rf":
         clf = RandomForestClassifier(
@@ -61,39 +62,6 @@ def train_classifier(
             random_state=random_state,
             n_jobs=-1,
         )
-
-    #RandomizedSearchCV can be added here if desired - achieved nearly optimal result but took much longer to train"
-    #if model_type == "rf":
-        #from sklearn.model_selection import RandomizedSearchCV
-
-        #base_rf = RandomForestClassifier(
-        #    class_weight="balanced",
-        #    random_state=random_state,
-        #    n_jobs=-1,
-        #)
-
-        #param_dist = {
-        #    "n_estimators": [100, 200, 300, 500],
-        #    "max_depth": [None, 20, 40, 60],
-        #    "min_samples_leaf": [1, 2, 4],
-        #    "min_samples_split": [2, 5, 10],
-        #    "max_features": ["sqrt", "log2"],
-        #}
-
-        #search = RandomizedSearchCV(
-        #    base_rf,
-        #    param_distributions=param_dist,
-        #    n_iter=20,
-        #    scoring="f1_macro",
-        #    cv=3,
-        #    random_state=random_state,
-        #    n_jobs=-1,
-        #    verbose=2,
-        #)
-        #search.fit(X_train, y_train)
-        #clf = search.best_estimator_
-        #print(f"\nBest parameters: {search.best_params_}")
-        #print(f"Best CV macro F1: {search.best_score_:.4f}")
     elif model_type == "xgb":
         try:
             from xgboost import XGBClassifier
@@ -113,10 +81,17 @@ def train_classifier(
 
     val_preds = clf.predict(X_val)
     print("\nValidation report:")
-    print(classification_report(y_val, val_preds, target_names=le.classes_))
+    present_labels = sorted(set(np.concatenate([y_val, val_preds])))
+    present_target_names = [le.classes_[i] for i in present_labels]
+    print(classification_report(
+        y_val, val_preds,
+        labels=present_labels,
+        target_names=present_target_names,
+        zero_division=0,
+    ))
 
-    model_path = run_dir / "model.pkl"
-    le_path    = run_dir / "label_encoder.pkl"
+    model_path  = run_dir / "model.pkl"
+    le_path     = run_dir / "label_encoder.pkl"
     config_path = run_dir / "config.json"
 
     with model_path.open("wb") as f:
@@ -128,10 +103,13 @@ def train_classifier(
     config = {
         "run_id": run_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "dataset": "cicids2017",
         "model_type": model_type,
         "n_estimators": n_estimators,
+        "class_weight": "balanced",
         "random_state": random_state,
         "val_size": val_size,
+        "test_size": test_size,
         "vae_run_dir": str(vae_run_dir),
         "classes": list(le.classes_),
         "input_dim": int(X_train.shape[1]),
@@ -151,14 +129,15 @@ def train_classifier(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train Stage 2 attack classifier.")
-    parser.add_argument("--data-dir",      default="data/nsl_kdd")
+    parser = argparse.ArgumentParser(description="Train Stage 2 attack classifier on CICIDS2017.")
+    parser.add_argument("--data-dir",      default="data/cicids2017")
     parser.add_argument("--vae-run-dir",   default="outputs/default")
     parser.add_argument("--outputs-root",  default="outputs")
     parser.add_argument("--model-type",    default="rf", choices=["rf", "xgb"])
     parser.add_argument("--n-estimators",  type=int, default=200)
     parser.add_argument("--random-state",  type=int, default=42)
-    parser.add_argument("--val-size",      type=float, default=0.2)
+    parser.add_argument("--val-size",      type=float, default=0.1)
+    parser.add_argument("--test-size",     type=float, default=0.2)
     args = parser.parse_args()
 
     train_classifier(
@@ -169,4 +148,5 @@ if __name__ == "__main__":
         n_estimators=args.n_estimators,
         random_state=args.random_state,
         val_size=args.val_size,
+        test_size=args.test_size,
     )

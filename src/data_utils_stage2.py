@@ -1,91 +1,104 @@
 import numpy as np
-import torch
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from torch.utils.data import DataLoader, TensorDataset
+
+from data_utils import apply_feature_transforms, apply_clip, LABEL_COL, BENIGN_LABEL
 
 
 ATTACK_CATEGORY_MAP = {
-    "normal": "normal",
-    "back": "DoS", "land": "DoS", "neptune": "DoS", "pod": "DoS",
-    "smurf": "DoS", "teardrop": "DoS", "apache2": "DoS", "udpstorm": "DoS",
-    "processtable": "DoS", "worm": "DoS", "mailbomb": "DoS",
-    "ipsweep": "Probe", "nmap": "Probe", "portsweep": "Probe", "satan": "Probe",
-    "mscan": "Probe", "saint": "Probe",
-    "ftp_write": "R2L", "guess_passwd": "R2L", "imap": "R2L", "multihop": "R2L",
-    "phf": "R2L", "spy": "R2L", "warezclient": "R2L", "warezmaster": "R2L",
-    "sendmail": "R2L", "named": "R2L", "snmpattack": "R2L", "snmpguess": "R2L",
-    "httptunnel": "R2L", "xlock": "R2L", "xsnoop": "R2L",
-    "buffer_overflow": "U2R", "loadmodule": "U2R", "perl": "U2R", "rootkit": "U2R",
-    "sqlattack": "U2R", "xterm": "U2R", "ps": "U2R",
+    "BENIGN": "benign",
+    "DoS Hulk": "DoS",
+    "DoS GoldenEye": "DoS",
+    "DoS slowloris": "DoS",
+    "DoS Slowhttptest": "DoS",
+    "DDoS": "DoS",
+    "PortScan": "Probe",
+    "FTP-Patator": "BruteForce",
+    "SSH-Patator": "BruteForce",
+    "Web Attack \ufffd Brute Force": "WebAttack",
+    "Web Attack \ufffd XSS": "WebAttack",
+    "Web Attack \ufffd Sql Injection": "WebAttack",
+    "Bot": "Bot",
+    "Infiltration": "Infiltration",
+    "Heartbleed": "Heartbleed",
 }
+
+RARE_CLASSES = {"Infiltration", "Heartbleed"}
 
 
 def map_attack_categories(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    df["attack_category"] = df["label"].map(ATTACK_CATEGORY_MAP).fillna("unknown")
+    df["attack_category"] = df[LABEL_COL].map(ATTACK_CATEGORY_MAP).fillna("unknown")
     return df
 
 
 def load_stage2_data(
-    df_train: pd.DataFrame,
-    df_test: pd.DataFrame,
-    preprocessor,
-    val_size: float = 0.2,
+    df_attacks: pd.DataFrame,
+    scaler,
+    feature_meta: dict,
+    val_size: float = 0.1,
+    test_size: float = 0.2,
     random_state: int = 42,
 ):
-    feature_cols = list(range(41))
+    surviving_cols     = feature_meta["surviving_cols"]
+    log_transform_cols = feature_meta["log_transform_cols"]
+    clip_lower         = np.asarray(feature_meta["clip_lower"], dtype=np.float32)
+    clip_upper         = np.asarray(feature_meta["clip_upper"], dtype=np.float32)
 
-    df_train = map_attack_categories(df_train.copy())
-    df_test  = map_attack_categories(df_test.copy())
+    df = map_attack_categories(df_attacks)
 
-    df_train_attacks = df_train[df_train["attack_category"] != "normal"].reset_index(drop=True)
-    df_test_attacks  = df_test[df_test["attack_category"]  != "normal"].reset_index(drop=True)
+    df_attack_only = df[df["attack_category"] != "benign"].reset_index(drop=True)
 
-    print(f"Attack rows — train: {len(df_train_attacks)}, test: {len(df_test_attacks)}")
-    print("Train category distribution:\n",
-          df_train_attacks["attack_category"].value_counts().to_string())
-    print("Test category distribution:\n",
-          df_test_attacks["attack_category"].value_counts().to_string())
+    unknown_count = int((df_attack_only["attack_category"] == "unknown").sum())
+    if unknown_count > 0:
+        print(f"WARNING: {unknown_count} rows have attack_category='unknown' (label not in map). Dropping.")
+        df_attack_only = df_attack_only[df_attack_only["attack_category"] != "unknown"].reset_index(drop=True)
 
-    X_train_proc = preprocessor.transform(df_train_attacks[feature_cols])
-    X_test_proc  = preprocessor.transform(df_test_attacks[feature_cols])
+    print(f"Attack rows for Stage 2: {len(df_attack_only):,}")
+    print("Category distribution:")
+    print(df_attack_only["attack_category"].value_counts().to_string())
 
-    X_train_np = X_train_proc.toarray() if hasattr(X_train_proc, "toarray") else X_train_proc
-    X_test_np  = X_test_proc.toarray()  if hasattr(X_test_proc,  "toarray") else X_test_proc
+    X_np = apply_feature_transforms(df_attack_only, surviving_cols, log_transform_cols)
+    X_np = apply_clip(X_np, clip_lower, clip_upper)
+    X_np = scaler.transform(X_np).astype(np.float32)
 
     le = LabelEncoder()
-    y_train_raw = df_train_attacks["attack_category"].values
-    y_test_raw  = df_test_attacks["attack_category"].values
+    y_raw = df_attack_only["attack_category"].values
+    le.fit(y_raw)
+    y = le.transform(y_raw)
 
-    le.fit(y_train_raw)
-    y_train = le.transform(y_train_raw)
-    y_test = np.array([
-        le.transform([c])[0] if c in le.classes_ else -1
-        for c in y_test_raw
-    ])
+    class_counts = pd.Series(y_raw).value_counts()
+    too_rare_for_stratify = class_counts[class_counts < 3].index.tolist()
+    if too_rare_for_stratify:
+        print(f"Note: classes with <3 samples cannot be stratified safely: {too_rare_for_stratify}")
+        print("Falling back to non-stratified split.")
+        stratify_outer = None
+    else:
+        stratify_outer = y
 
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train_np, y_train,
-        test_size=val_size,
-        stratify=y_train,
+    X_trainval, X_test, y_trainval, y_test = train_test_split(
+        X_np, y,
+        test_size=test_size,
+        stratify=stratify_outer,
         random_state=random_state,
     )
 
-    print(f"\nStage 2 split sizes | train={len(y_train)}, val={len(y_val)}, test={len(y_test)}")
+    stratify_inner = y_trainval if stratify_outer is not None else None
 
-    return X_train, y_train, X_val, y_val, X_test_np, y_test, le
-
-
-def make_loaders(X_train, y_train, X_val, y_val, X_test, y_test, batch_size: int = 512):
-    def to_loader(X, y, shuffle):
-        X_t = torch.tensor(X, dtype=torch.float32)
-        y_t = torch.tensor(y, dtype=torch.long)
-        return DataLoader(TensorDataset(X_t, y_t), batch_size=batch_size, shuffle=shuffle)
-
-    return (
-        to_loader(X_train, y_train, shuffle=True),
-        to_loader(X_val,   y_val,   shuffle=False),
-        to_loader(X_test,  y_test,  shuffle=False),
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_trainval, y_trainval,
+        test_size=val_size,
+        stratify=stratify_inner,
+        random_state=random_state,
     )
+
+    print(f"\nStage 2 split sizes | train={len(y_train):,}, val={len(y_val):,}, test={len(y_test):,}")
+    print(f"Classes: {list(le.classes_)}")
+
+    rare_present = [c for c in le.classes_ if c in RARE_CLASSES]
+    if rare_present:
+        print(f"Note: rare classes kept (will likely fall below confidence threshold "
+              f"and route to novel_anomaly): {rare_present}")
+
+    return X_train, y_train, X_val, y_val, X_test, y_test, le

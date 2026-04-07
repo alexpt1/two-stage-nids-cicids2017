@@ -1,0 +1,25 @@
+{
+  "model_path": "C:\\Users\\alexp\\OneDrive\\Documents\\two-stage-nids-cicids2017\\outputs\\vae_20260402_001220\\model.pt",
+  "threshold_path": "C:\\Users\\alexp\\OneDrive\\Documents\\two-stage-nids-cicids2017\\outputs\\vae_20260402_001220\\threshold.json",
+  "threshold": 0.00867016613483429,
+  "threshold_method": "roc_optimal",
+  "precision": 0.411800247859893,
+  "recall": 0.8388389287671479,
+  "f1": 0.552412054950126,
+  "roc_auc": 0.8207331049467887,
+  "pr_auc": 0.6693811770441275,
+  "alert_rate": 0.493259,
+  "confusion_matrix": {
+    "tn": 214999,
+    "fp": 133369,
+    "fn": 17939,
+    "tp": 93372
+  },
+  "recall_at_fpr_1pct": 0.2901060991276693,
+  "recall_at_fpr_5pct": 0.478128846205676,
+  "recall_at_fpr_10pct": 0.5280250828759062,
+  "fnr": 0.1611610712328521,
+  "tpr": 0.411800247859893,
+  "scoring": "mse",
+  "evaluated_at": "2026-04-02T15:03:47.597503+00:00"
+}

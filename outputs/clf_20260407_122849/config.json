@@ -1,0 +1,24 @@
+{
+  "run_id": "clf_20260407_122849",
+  "created_at": "2026-04-07T12:29:47.942017+00:00",
+  "dataset": "cicids2017",
+  "model_type": "rf",
+  "n_estimators": 200,
+  "class_weight": "balanced",
+  "random_state": 42,
+  "val_size": 0.1,
+  "test_size": 0.2,
+  "vae_run_dir": "outputs\\vae_20260405_213312",
+  "classes": [
+    "Bot",
+    "BruteForce",
+    "DoS",
+    "Heartbleed",
+    "Infiltration",
+    "Probe"
+  ],
+  "input_dim": 67,
+  "train_samples": 399150,
+  "val_samples": 44350,
+  "test_samples": 110876
+}

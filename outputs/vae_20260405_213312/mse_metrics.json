@@ -1,0 +1,25 @@
+{
+  model_path CUsersalexpOneDriveDocumentstwo-stage-nids-cicids2017outputsvae_20260405_213312model.pt,
+  threshold_path CUsersalexpOneDriveDocumentstwo-stage-nids-cicids2017outputsvae_20260405_213312threshold.json,
+  threshold 0.047259315848350525,
+  threshold_method roc_optimal,
+  precision 0.7081357352325094,
+  recall 0.7592780587722687,
+  f1 0.7328156905588721,
+  roc_auc 0.9031157986539026,
+  pr_auc 0.7526369362449914,
+  alert_rate 0.259638,
+  confusion_matrix {
+    tn 313534,
+    fp 34834,
+    fn 26795,
+    tp 84516
+  },
+  recall_at_fpr_1pct 0.24732506221307868,
+  recall_at_fpr_5pct 0.5906514180988401,
+  recall_at_fpr_10pct 0.7592780587722687,
+  fnr 0.2407219412277313,
+  tpr 0.7081357352325094,
+  scoring mse,
+  evaluated_at 2026-04-05T214151.001156+0000
+}
