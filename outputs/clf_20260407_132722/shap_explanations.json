@@ -1,0 +1,492 @@
+[
+  {
+    "sample_index": 3595,
+    "predicted_class": "Bot",
+    "confidence": 0.615,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.12738746404647827,
+    "plain_english_verdict": "Flagged as Bot primarily due to elevated Destination Port, low Bwd IAT Max, with Total Fwd Packets contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Total Fwd Packets",
+        "shap_value": -0.12018218584107046,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Destination Port",
+        "shap_value": 0.11016841028266754,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "ACK Flag Count",
+        "shap_value": -0.03273600611247503,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd IAT Max",
+        "shap_value": 0.030569900034233797,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Fwd Packets/s",
+        "shap_value": -0.02804975700373234,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 38949,
+    "predicted_class": "Bot",
+    "confidence": 0.64,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.13732706010341644,
+    "plain_english_verdict": "Flagged as Bot primarily due to elevated Destination Port, low RST Flag Count, with Total Fwd Packets contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Total Fwd Packets",
+        "shap_value": -0.12040816754015679,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Destination Port",
+        "shap_value": 0.10862789408402022,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "RST Flag Count",
+        "shap_value": 0.03585698159489766,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "ACK Flag Count",
+        "shap_value": -0.03318720504891445,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd IAT Max",
+        "shap_value": 0.030911368170391144,
+        "direction": "increases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 125,
+    "predicted_class": "BruteForce",
+    "confidence": 0.615,
+    "severity": "MEDIUM",
+    "vae_reconstruction_error": 0.048520684242248535,
+    "plain_english_verdict": "Flagged as BruteForce primarily due to low Bwd Packet Length Min, low Bwd Header Length, with Flow Packets/s contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Flow Packets/s",
+        "shap_value": -0.045190787974688645,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd Packet Length Min",
+        "shap_value": 0.028006050702515495,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Bwd Header Length",
+        "shap_value": 0.024281202316942654,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Max Packet Length",
+        "shap_value": -0.020905823898598897,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Active Max",
+        "shap_value": -0.018465774427528867,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 8128,
+    "predicted_class": "BruteForce",
+    "confidence": 0.745,
+    "severity": "MEDIUM",
+    "vae_reconstruction_error": 0.045680563896894455,
+    "plain_english_verdict": "Flagged as BruteForce primarily due to low Bwd Packet Length Min, with Flow Packets/s contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Bwd Packet Length Min",
+        "shap_value": 0.029776246525434546,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Flow Packets/s",
+        "shap_value": -0.0205149474945938,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd IAT Mean",
+        "shap_value": -0.017686767296795552,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Flow IAT Min",
+        "shap_value": -0.015996537140334225,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Down/Up Ratio",
+        "shap_value": -0.01469542213858361,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 32639,
+    "predicted_class": "DoS",
+    "confidence": 1.0,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.11006517708301544,
+    "plain_english_verdict": "Flagged as DoS primarily due to low Fwd Packet Length Mean, low Init_Win_bytes_forward, with Bwd IAT Total contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Fwd Packet Length Mean",
+        "shap_value": 0.00791207467626549,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Init_Win_bytes_forward",
+        "shap_value": 0.004716250077908626,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Bwd IAT Total",
+        "shap_value": -0.003977055844857489,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Flow IAT Max",
+        "shap_value": -0.0037862753328729327,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Active Std",
+        "shap_value": -0.003461577164995049,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 37277,
+    "predicted_class": "DoS",
+    "confidence": 0.935,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.20268261432647705,
+    "plain_english_verdict": "Flagged as DoS primarily due to low Bwd IAT Min, low Avg Bwd Segment Size, with Active Min contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Bwd IAT Min",
+        "shap_value": 0.00887569791984788,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Active Min",
+        "shap_value": -0.007872440440823993,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Avg Bwd Segment Size",
+        "shap_value": 0.00768427229981171,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Idle Std",
+        "shap_value": 0.007089804330958032,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Bwd Header Length",
+        "shap_value": -0.00683904940435923,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 27175,
+    "predicted_class": "Heartbleed",
+    "confidence": 0.735,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.23636223375797272,
+    "plain_english_verdict": "Flagged as Heartbleed primarily due to low Flow IAT Min, low Bwd IAT Mean, with Flow IAT Max contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Flow IAT Min",
+        "shap_value": 0.030212499437620863,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Flow IAT Max",
+        "shap_value": -0.02306019662930737,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd IAT Mean",
+        "shap_value": 0.01760583301074803,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Idle Mean",
+        "shap_value": -0.015343433388130165,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd IAT Max",
+        "shap_value": -0.014603510073067696,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 37468,
+    "predicted_class": "Heartbleed",
+    "confidence": 0.71,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.2502436935901642,
+    "plain_english_verdict": "Flagged as Heartbleed primarily due to low Flow IAT Min, low Bwd IAT Mean, with Flow IAT Max contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Flow IAT Min",
+        "shap_value": 0.027737499492941423,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Flow IAT Max",
+        "shap_value": -0.02287609310936773,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd IAT Mean",
+        "shap_value": 0.01760583301074803,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Idle Mean",
+        "shap_value": -0.014996414810260034,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd IAT Max",
+        "shap_value": -0.014355215503663744,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 8312,
+    "predicted_class": "Infiltration",
+    "confidence": 0.655,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.07483614981174469,
+    "plain_english_verdict": "Flagged as Infiltration primarily due to low Min Packet Length, low RST Flag Count, with Packet Length Std contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Min Packet Length",
+        "shap_value": 0.014048577311760653,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Packet Length Std",
+        "shap_value": -0.012909138731043584,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "URG Flag Count",
+        "shap_value": -0.009851971911234613,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "RST Flag Count",
+        "shap_value": 0.005978780402062967,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "shap_value": -0.0057582460997610595,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 9773,
+    "predicted_class": "Infiltration",
+    "confidence": 0.62,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.05072778835892677,
+    "plain_english_verdict": "Flagged as Infiltration primarily due to elevated Fwd Packet Length Std, elevated Total Fwd Packets, with Destination Port contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Destination Port",
+        "shap_value": -0.008517086733098722,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "shap_value": 0.006082261867400121,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "shap_value": -0.005954004670280657,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Total Fwd Packets",
+        "shap_value": 0.004943551563555957,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Min Packet Length",
+        "shap_value": -0.0034798184535793555,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 5051,
+    "predicted_class": "Probe",
+    "confidence": 1.0,
+    "severity": "LOW",
+    "vae_reconstruction_error": 0.3796927332878113,
+    "plain_english_verdict": "Flagged as Probe primarily due to low Bwd Packets/s, low Bwd Packet Length Std, with Fwd Header Length contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Bwd Packets/s",
+        "shap_value": 0.031408489449741665,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Bwd Packet Length Std",
+        "shap_value": 0.027397657861018984,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Fwd Header Length",
+        "shap_value": -0.026098236180027923,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Init_Win_bytes_forward",
+        "shap_value": 0.02320681917748729,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Subflow Fwd Bytes",
+        "shap_value": -0.022273700169370157,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 38200,
+    "predicted_class": "Probe",
+    "confidence": 1.0,
+    "severity": "LOW",
+    "vae_reconstruction_error": 0.09347884356975555,
+    "plain_english_verdict": "Flagged as Probe primarily due to elevated Bwd Packets/s, low Bwd Packet Length Std, with Fwd Header Length contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Bwd Packets/s",
+        "shap_value": 0.031907699372116766,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Bwd Packet Length Std",
+        "shap_value": 0.028588445338236214,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Active Min",
+        "shap_value": 0.022850229976935452,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Fwd Header Length",
+        "shap_value": -0.02245712747422054,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "shap_value": -0.018954312328428386,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 21920,
+    "predicted_class": "WebAttack",
+    "confidence": 0.765,
+    "severity": "HIGH",
+    "vae_reconstruction_error": 0.05150894075632095,
+    "plain_english_verdict": "Flagged as WebAttack primarily due to low Bwd Packet Length Max, low Active Mean, with Init_Win_bytes_forward contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Bwd Packet Length Max",
+        "shap_value": 0.01636637272515145,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Active Mean",
+        "shap_value": 0.00941209844824698,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Init_Win_bytes_forward",
+        "shap_value": -0.009322772787872963,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "shap_value": -0.007999226304309558,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Total Length of Fwd Packets",
+        "shap_value": -0.0074818272405764216,
+        "direction": "decreases risk"
+      }
+    ]
+  },
+  {
+    "sample_index": 33564,
+    "predicted_class": "WebAttack",
+    "confidence": 0.61,
+    "severity": "MEDIUM",
+    "vae_reconstruction_error": 0.059394389390945435,
+    "plain_english_verdict": "Flagged as WebAttack primarily due to low Bwd Packet Length Max, low Fwd Packet Length Max, with Total Length of Fwd Packets contributing against this classification",
+    "top_features": [
+      {
+        "feature": "Bwd Packet Length Max",
+        "shap_value": 0.025431765229645863,
+        "direction": "increases risk"
+      },
+      {
+        "feature": "Total Length of Fwd Packets",
+        "shap_value": -0.01622627524724976,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "shap_value": -0.00993148812536674,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "shap_value": -0.009224387670323608,
+        "direction": "decreases risk"
+      },
+      {
+        "feature": "Fwd Packet Length Max",
+        "shap_value": 0.006147800987992014,
+        "direction": "increases risk"
+      }
+    ]
+  }
+]

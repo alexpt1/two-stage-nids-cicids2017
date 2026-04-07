@@ -1,0 +1,129 @@
+{
+  "clf_run_dir": "C:\\Users\\alexp\\OneDrive\\Documents\\two-stage-nids-cicids2017\\outputs\\clf_20260407_132722",
+  "confidence_threshold": 0.6,
+  "macro_f1": 0.9989693843498405,
+  "novel_anomaly_rate": 0.0001347563605002156,
+  "per_class_recall": {
+    "Bot": 1.0,
+    "BruteForce": 1.0,
+    "DoS": 0.9999868325762065,
+    "Heartbleed": 1.0,
+    "Infiltration": 1.0,
+    "Probe": 0.9997795830971724,
+    "WebAttack": 0.9883720930232558
+  },
+  "per_class_novel_routing": {
+    "Bot": {
+      "n_total": 391,
+      "n_routed_to_novel": 0,
+      "novel_rate": 0.0
+    },
+    "BruteForce": {
+      "n_total": 2767,
+      "n_routed_to_novel": 2,
+      "novel_rate": 0.0007228044813877846
+    },
+    "DoS": {
+      "n_total": 75948,
+      "n_routed_to_novel": 3,
+      "novel_rate": 3.950071101279823e-05
+    },
+    "Heartbleed": {
+      "n_total": 2,
+      "n_routed_to_novel": 0,
+      "novel_rate": 0.0
+    },
+    "Infiltration": {
+      "n_total": 7,
+      "n_routed_to_novel": 1,
+      "novel_rate": 0.14285714285714285
+    },
+    "Probe": {
+      "n_total": 31761,
+      "n_routed_to_novel": 3,
+      "novel_rate": 9.445546424860678e-05
+    },
+    "WebAttack": {
+      "n_total": 436,
+      "n_routed_to_novel": 6,
+      "novel_rate": 0.013761467889908258
+    }
+  },
+  "confusion_matrix": [
+    [
+      391,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      2765,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      75944,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      6,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      6,
+      0,
+      0,
+      31751,
+      1
+    ],
+    [
+      0,
+      0,
+      5,
+      0,
+      0,
+      0,
+      425
+    ]
+  ],
+  "class_names": [
+    "Bot",
+    "BruteForce",
+    "DoS",
+    "Heartbleed",
+    "Infiltration",
+    "Probe",
+    "WebAttack"
+  ],
+  "n_test_samples": 111312,
+  "n_novel": 15,
+  "evaluated_at": "2026-04-07T13:40:11.642218+00:00"
+}

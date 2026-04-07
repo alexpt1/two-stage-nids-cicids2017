@@ -3,10 +3,13 @@ import argparse
 from pathlib import Path
 
 ATTACK_COSTS = {
-    "DoS":   10,
-    "Probe":  5,
-    "R2L":   20,
-    "U2R":   50,
+    "DoS":          20,
+    "Probe":         5,
+    "BruteForce":   15,
+    "WebAttack":    20,
+    "Bot":          25,
+    "Infiltration": 50,
+    "Heartbleed":   50,
 }
 FP_COST = 1
 

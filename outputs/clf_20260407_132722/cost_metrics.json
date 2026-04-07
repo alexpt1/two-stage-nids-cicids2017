@@ -1,0 +1,24 @@
+{
+  "total_cost": 36794.0,
+  "fn_cost": 155.0,
+  "fp_cost": 36639.0,
+  "attack_costs": {
+    "DoS": 20,
+    "Probe": 5,
+    "BruteForce": 15,
+    "WebAttack": 20,
+    "Bot": 25,
+    "Infiltration": 50,
+    "Heartbleed": 50
+  },
+  "fp_unit_cost": 1.0,
+  "per_class_fn_cost": {
+    "Bot": 0,
+    "BruteForce": 0,
+    "DoS": 20,
+    "Heartbleed": 0,
+    "Infiltration": 0,
+    "Probe": 35,
+    "WebAttack": 100
+  }
+}

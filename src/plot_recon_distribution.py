@@ -2,12 +2,16 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
-from data_utils import load_nsl_kdd_raw
+
+from data_utils import (
+    load_cicids2017_raw,
+    apply_feature_transforms,
+    apply_clip,
+    LABEL_COL,
+    BENIGN_LABEL,
+)
 from vae_model import VAE
-import sklearn
-from torch.serialization import add_safe_globals
 from thresholding import load_threshold
 
 
@@ -25,155 +29,131 @@ def _infer_hidden_dims_from_state_dict(state_dict):
     return tuple(hidden_dims)
 
 
-def _build_test_loader_with_saved_preprocessor(
-    df_train,
-    df_test,
-    preprocessor,
-    reshuffle_all: bool = False,
-    test_size: float = 0.2,
-    val_size: float = 0.1,
-    random_state: int = 42,
-):
-    df_train = df_train.copy()
-    df_test = df_test.copy()
-    df_train["is_attack"] = (df_train["label"] != "normal").astype(int)
-    df_test["is_attack"] = (df_test["label"] != "normal").astype(int)
-    feature_cols = list(range(41))
-
-    if reshuffle_all:
-        from pandas import concat
-
-        df_all = concat([df_train, df_test], ignore_index=True)
-        X = df_all[feature_cols]
-        y = df_all["is_attack"].values
-        X_train_full, X_test, y_train_full, y_test = train_test_split(
-            X, y, test_size=test_size, stratify=y, random_state=random_state
-        )
-        _X_train, _X_val, _y_train, _y_val = train_test_split(
-            X_train_full,
-            y_train_full,
-            test_size=val_size,
-            stratify=y_train_full,
-            random_state=random_state,
-        )
-    else:
-        X_test = df_test[feature_cols]
-        y_test = df_test["is_attack"].values
-
-    X_test_processed = preprocessor.transform(X_test)
-    X_test_np = X_test_processed.toarray() if hasattr(X_test_processed, "toarray") else X_test_processed
-    X_test_tensor = torch.tensor(X_test_np, dtype=torch.float32)
-    y_test_tensor = torch.tensor(y_test, dtype=torch.int64)
-    test_loader = DataLoader(TensorDataset(X_test_tensor, y_test_tensor), batch_size=1024, shuffle=False)
-    return test_loader, X_test_tensor.shape[1]
-
-
 def load_model(model_path, device):
-    
-    add_safe_globals([
-        sklearn.compose.ColumnTransformer,
-        sklearn.preprocessing.OneHotEncoder,
-        sklearn.preprocessing.StandardScaler
-    ])
-
     checkpoint = torch.load(model_path, map_location=device, weights_only=False)
-
     state_dict = checkpoint["model_state_dict"]
-    input_dim = int(checkpoint.get("input_dim", state_dict["decoder.4.bias"].shape[0]))
-    latent_dim = int(checkpoint.get("latent_dim", state_dict["fc_mu.bias"].shape[0]))
+    input_dim  = int(checkpoint["input_dim"])
+    latent_dim = int(checkpoint["latent_dim"])
     hidden_dims = _infer_hidden_dims_from_state_dict(state_dict)
     model = VAE(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.to(device)
-    model.eval()
+    model.load_state_dict(state_dict)
+    model.to(device).eval()
+    return model, checkpoint
 
-    return model
+
+def build_loader(df_attacks, scaler, feature_meta, max_rows, random_state, batch_size=2048):
+    surviving_cols     = feature_meta["surviving_cols"]
+    log_transform_cols = feature_meta["log_transform_cols"]
+    clip_lower         = np.asarray(feature_meta["clip_lower"], dtype=np.float32)
+    clip_upper         = np.asarray(feature_meta["clip_upper"], dtype=np.float32)
+
+    if max_rows and len(df_attacks) > max_rows:
+        print(f"Subsampling {max_rows:,} rows from {len(df_attacks):,} attack-day rows...")
+        df_attacks = df_attacks.sample(n=max_rows, random_state=random_state)
+
+    y = (df_attacks[LABEL_COL] != BENIGN_LABEL).astype(int).values
+    n_benign = int((y == 0).sum())
+    n_attack = int((y == 1).sum())
+    print(f"Test set: {n_benign:,} benign, {n_attack:,} attack")
+
+    X_np = apply_feature_transforms(df_attacks, surviving_cols, log_transform_cols)
+    X_np = apply_clip(X_np, clip_lower, clip_upper)
+    X_np = scaler.transform(X_np).astype(np.float32)
+
+    X_tensor = torch.tensor(X_np, dtype=torch.float32)
+    y_tensor = torch.tensor(y, dtype=torch.int64)
+    loader = DataLoader(TensorDataset(X_tensor, y_tensor), batch_size=batch_size, shuffle=False)
+    return loader
 
 
 def get_reconstruction_errors(model, loader, device):
     errors = []
     labels = []
-
     with torch.no_grad():
         for x, y in loader:
             x = x.to(device)
-            x_recon, mu, logvar = model(x)
+            x_recon, _, _ = model(x)
             err = ((x_recon - x) ** 2).mean(dim=1).cpu().numpy()
             errors.extend(err)
             labels.extend(y.numpy())
-
     return np.array(errors), np.array(labels)
 
 
-def plot_distribution(errors, labels, threshold=None):
+def plot_distribution(errors, labels, threshold=None, save_path=None):
     normal = errors[labels == 0]
     attack = errors[labels == 1]
 
-    bins = np.logspace(np.log10(errors.min()), np.log10(errors.max()), 80)
+    e_min = errors[errors > 0].min()
+    e_max = errors.max()
+    bins = np.logspace(np.log10(e_min), np.log10(e_max), 80)
 
-    fig = plt.figure(figsize=(10, 6))
-    fig.canvas.manager.set_window_title("Reconstruction Error Distribution - NSL-KDD")
-
-    plt.hist(normal, bins=bins, alpha=0.6, density=True, label="Normal")
-    plt.hist(attack, bins=bins, alpha=0.6, density=True, label="Attack")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.hist(normal, bins=bins, alpha=0.6, density=True, label=f"Benign (n={len(normal):,})")
+    ax.hist(attack, bins=bins, alpha=0.6, density=True, label=f"Attack (n={len(attack):,})")
     if threshold is not None:
-        plt.axvline(threshold, color="red", linestyle="--", linewidth=2, label="Threshold")
-    plt.xscale("log")
-    plt.xlabel("Reconstruction Error (log scale)")
-    plt.ylabel("Density")
-    plt.title("Distribution of Reconstruction Error\nNormal vs Attack (Log-Scaled Bins)")
-    plt.legend()
-    plt.grid(True)
+        ax.axvline(threshold, color="red", linestyle="--", linewidth=2,
+                   label=f"Threshold ({threshold:.4f})")
+    ax.set_xscale("log")
+    ax.set_xlabel("Reconstruction Error (log scale)")
+    ax.set_ylabel("Density")
+    ax.set_title("VAE Reconstruction Error Distribution\nBenign vs Attack - CICIDS2017")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Figure saved to {save_path}")
+
     plt.show()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Plot reconstruction error distribution with optional persisted threshold."
+        description="Plot VAE reconstruction error distribution on CICIDS2017 attack-day data."
     )
-    parser.add_argument("--data-dir", default="../data/nsl_kdd")
-    parser.add_argument("--model-path", default="../models/vae_nsl_kdd.pt")
-    parser.add_argument("--threshold-path", default=None)
-    parser.add_argument("--device", default=None)
-    parser.add_argument("--reshuffle-all", action="store_true")
+    parser.add_argument("--data-dir",      default="data/cicids2017")
+    parser.add_argument("--vae-run-dir",   default="outputs/default")
+    parser.add_argument("--threshold-path", default=None,
+                        help="Path to threshold.json. Defaults to <vae-run-dir>/threshold.json")
+    parser.add_argument("--max-rows",      type=int, default=300000,
+                        help="Subsample attack-day rows to keep runtime manageable (default 300k)")
+    parser.add_argument("--random-state",  type=int, default=42)
+    parser.add_argument("--save-path",     default=None,
+                        help="If set, save the figure to this path (e.g. figures/recon_dist.png)")
+    parser.add_argument("--device",        default=None)
     args = parser.parse_args()
 
-    device = (
-        args.device
-        if args.device is not None
-        else ("cuda" if (torch.cuda.is_available() and torch.cuda.device_count() > 0) else "cpu")
+    device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    from pathlib import Path
+    vae_run_path  = Path(args.vae_run_dir)
+    model_path    = vae_run_path / "model.pt"
+    threshold_path = Path(args.threshold_path) if args.threshold_path else vae_run_path / "threshold.json"
+
+    model, checkpoint = load_model(model_path, device)
+    scaler       = checkpoint["scaler"]
+    feature_meta = checkpoint["feature_meta"]
+
+    print("Loading CICIDS2017 attack-day data...")
+    _df_monday, df_attacks = load_cicids2017_raw(args.data_dir)
+
+    loader = build_loader(
+        df_attacks, scaler, feature_meta,
+        max_rows=args.max_rows,
+        random_state=args.random_state,
     )
-    print(f"Using : {device}")
 
-    df_train, df_test = load_nsl_kdd_raw(args.data_dir)
-    checkpoint = torch.load(args.model_path, map_location=device, weights_only=False)
-    preprocessor = checkpoint.get("preprocessor")
-    if preprocessor is None:
-        raise ValueError(
-            "Checkpoint does not contain 'preprocessor'. "
-            "Use a checkpoint produced by the current training script."
-        )
-    test_loader, transformed_input_dim = _build_test_loader_with_saved_preprocessor(
-        df_train,
-        df_test,
-        preprocessor=preprocessor,
-        reshuffle_all=args.reshuffle_all,
-    )
-
-    model = load_model(args.model_path, device)
-    model_input_dim = int(checkpoint.get("input_dim", transformed_input_dim))
-    if transformed_input_dim != model_input_dim:
-        raise ValueError(
-            f"Feature dimension mismatch after preprocessing: got {transformed_input_dim}, "
-            f"but checkpoint expects input_dim={model_input_dim}."
-        )
-
-    errors, labels = get_reconstruction_errors(model, test_loader, device)
+    print("Computing reconstruction errors...")
+    errors, labels = get_reconstruction_errors(model, loader, device)
 
     threshold = None
-    if args.threshold_path:
-        threshold_payload = load_threshold(args.threshold_path)
-        threshold = float(threshold_payload["value"])
-        print(f"Loaded threshold from {args.threshold_path}: {threshold:.6f}")
+    if threshold_path.exists():
+        payload   = load_threshold(threshold_path)
+        threshold = float(payload["value"])
+        print(f"Loaded threshold: {threshold:.6f} ({payload.get('method')})")
+    else:
+        print("No threshold.json found - plotting without threshold line.")
 
-    plot_distribution(errors, labels, threshold=threshold)
+    plot_distribution(errors, labels, threshold=threshold, save_path=args.save_path)

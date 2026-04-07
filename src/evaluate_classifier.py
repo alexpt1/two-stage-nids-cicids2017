@@ -5,24 +5,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-import sklearn
 import torch
-from torch.serialization import add_safe_globals
 from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     f1_score,
 )
 
-from data_utils import load_nsl_kdd_raw
+from data_utils import load_cicids2017_raw
 from data_utils_stage2 import load_stage2_data
 
 
 def evaluate_classifier(
-    data_dir: str = "data/nsl_kdd",
+    data_dir: str = "data/cicids2017",
     clf_run_dir: str = "outputs/clf_default",
     confidence_threshold: float = 0.6,
-    val_size: float = 0.2,
+    val_size: float = 0.1,
+    test_size: float = 0.2,
     random_state: int = 42,
 ):
     clf_run_path = Path(clf_run_dir)
@@ -38,50 +37,40 @@ def evaluate_classifier(
     print(f"Loading VAE checkpoint from : {vae_model_path}")
     print(f"Loading classifier from     : {model_path}")
 
-    add_safe_globals([
-        sklearn.compose.ColumnTransformer,
-        sklearn.preprocessing.OneHotEncoder,
-        sklearn.preprocessing.StandardScaler,
-    ])
-
     device = "cuda" if torch.cuda.is_available() else "cpu"
     checkpoint = torch.load(vae_model_path, map_location=device, weights_only=False)
-    preprocessor = checkpoint.get("preprocessor")
-    if preprocessor is None:
-        raise ValueError("VAE checkpoint does not contain a preprocessor.")
+    scaler       = checkpoint.get("scaler")
+    feature_meta = checkpoint.get("feature_meta")
+    if scaler is None or feature_meta is None:
+        raise ValueError(
+            "VAE checkpoint missing 'scaler' or 'feature_meta'. "
+            "Retrain the VAE with the current train_vae.py."
+        )
 
     with model_path.open("rb") as f:
         payload = pickle.load(f)
         clf = payload["clf"] if isinstance(payload, dict) else payload
-        selector = payload.get("selector") if isinstance(payload, dict) else None
 
     with le_path.open("rb") as f:
         le = pickle.load(f)
 
-    print("Loading NSL-KDD raw data...")
-    df_train, df_test = load_nsl_kdd_raw(data_dir)
+    print("Loading CICIDS2017 attack data...")
+    _df_monday, df_attacks = load_cicids2017_raw(data_dir)
 
     _, _, _, _, X_test, y_test, _ = load_stage2_data(
-        df_train, df_test, preprocessor,
+        df_attacks,
+        scaler=scaler,
+        feature_meta=feature_meta,
         val_size=val_size,
+        test_size=test_size,
         random_state=random_state,
     )
-
-    valid_mask = y_test != -1
-    if not valid_mask.all():
-        n_dropped = int((~valid_mask).sum())
-        print(f"Dropping {n_dropped} test samples with unseen attack categories.")
-    X_test = X_test[valid_mask]
-    y_test = y_test[valid_mask]
 
     proba = clf.predict_proba(X_test)
     y_pred_raw = np.argmax(proba, axis=1)
     confidence = proba[np.arange(len(proba)), y_pred_raw]
 
     novel_mask = confidence < confidence_threshold
-    y_pred = y_pred_raw.copy().astype(object)
-    y_pred[novel_mask] = "novel_anomaly"
-
     novel_rate = float(novel_mask.sum() / len(novel_mask))
     print(f"\nNovel anomaly rate (confidence < {confidence_threshold}): {novel_rate:.4f}")
 
@@ -90,12 +79,26 @@ def evaluate_classifier(
     y_pred_known = y_pred_raw[known_mask]
 
     class_names = list(le.classes_)
-    macro_f1 = f1_score(y_test_known, y_pred_known, average="macro")
+
+    present_labels = sorted(set(np.concatenate([y_test_known, y_pred_known])))
+    present_target_names = [class_names[i] for i in present_labels]
+
+    macro_f1 = f1_score(
+        y_test_known, y_pred_known,
+        labels=present_labels,
+        average="macro",
+        zero_division=0,
+    )
 
     print("\nClassification Report (known-class predictions only):")
-    print(classification_report(y_test_known, y_pred_known, target_names=class_names))
+    print(classification_report(
+        y_test_known, y_pred_known,
+        labels=present_labels,
+        target_names=present_target_names,
+        zero_division=0,
+    ))
 
-    cm = confusion_matrix(y_test_known, y_pred_known)
+    cm = confusion_matrix(y_test_known, y_pred_known, labels=list(range(len(class_names))))
     print("Confusion Matrix (rows=true, cols=predicted):")
     print("Classes:", class_names)
     print(cm)
@@ -110,7 +113,32 @@ def evaluate_classifier(
 
     print("\nPer-class recall:")
     for cls, rec in per_class_recall.items():
-        print(f"  {cls:10s}: {rec:.4f}" if rec is not None else f"  {cls:10s}: N/A")
+        if rec is None:
+            print(f"  {cls:15s}: N/A")
+        else:
+            print(f"  {cls:15s}: {rec:.4f}")
+
+    per_class_novel = {}
+    for i, cls in enumerate(class_names):
+        mask = y_test == i
+        n_total = int(mask.sum())
+        if n_total == 0:
+            per_class_novel[cls] = None
+        else:
+            n_novel = int((mask & novel_mask).sum())
+            per_class_novel[cls] = {
+                "n_total": n_total,
+                "n_routed_to_novel": n_novel,
+                "novel_rate": float(n_novel / n_total),
+            }
+
+    print("\nPer-class routing to novel_anomaly (all test samples):")
+    for cls, stats in per_class_novel.items():
+        if stats is None:
+            print(f"  {cls:15s}: N/A")
+        else:
+            print(f"  {cls:15s}: {stats['n_routed_to_novel']:6d}/{stats['n_total']:6d}  "
+                  f"({stats['novel_rate']*100:.1f}%)")
 
     metrics_payload = {
         "clf_run_dir": str(clf_run_dir),
@@ -118,6 +146,7 @@ def evaluate_classifier(
         "macro_f1": float(macro_f1),
         "novel_anomaly_rate": novel_rate,
         "per_class_recall": per_class_recall,
+        "per_class_novel_routing": per_class_novel,
         "confusion_matrix": cm.tolist(),
         "class_names": class_names,
         "n_test_samples": int(len(y_test)),
@@ -130,11 +159,12 @@ def evaluate_classifier(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Evaluate Stage 2 attack classifier.")
-    parser.add_argument("--data-dir",             default="data/nsl_kdd")
+    parser = argparse.ArgumentParser(description="Evaluate Stage 2 attack classifier on CICIDS2017.")
+    parser.add_argument("--data-dir",             default="data/cicids2017")
     parser.add_argument("--clf-run-dir",          default="outputs/clf_default")
     parser.add_argument("--confidence-threshold", type=float, default=0.6)
-    parser.add_argument("--val-size",             type=float, default=0.2)
+    parser.add_argument("--val-size",             type=float, default=0.1)
+    parser.add_argument("--test-size",            type=float, default=0.2)
     parser.add_argument("--random-state",         type=int,   default=42)
     args = parser.parse_args()
 
@@ -143,5 +173,6 @@ if __name__ == "__main__":
         clf_run_dir=args.clf_run_dir,
         confidence_threshold=args.confidence_threshold,
         val_size=args.val_size,
+        test_size=args.test_size,
         random_state=args.random_state,
     )
