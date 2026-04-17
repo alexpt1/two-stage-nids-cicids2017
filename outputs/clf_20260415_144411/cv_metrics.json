@@ -1,0 +1,100 @@
+{
+  "clf_run_dir": "outputs/clf_20260415_144411",
+  "vae_run_dir": "outputs/vae_20260405_213312",
+  "n_splits": 5,
+  "n_estimators": 200,
+  "class_weight": "balanced",
+  "random_state": 42,
+  "val_size": 0.1,
+  "test_size": 0.2,
+  "class_names": [
+    "Bot",
+    "BruteForce",
+    "DoS",
+    "Heartbleed",
+    "Infiltration",
+    "Probe",
+    "WebAttack"
+  ],
+  "n_train_total": 400719,
+  "fold_results": [
+    {
+      "fold": 1,
+      "n_train": 320575,
+      "n_val": 80144,
+      "macro_f1": 0.9851089846913672,
+      "per_class_f1": {
+        "Bot": 0.9964539007092199,
+        "BruteForce": 1.0,
+        "DoS": 0.9999085655767683,
+        "Heartbleed": 1.0,
+        "Infiltration": 0.9090909090909091,
+        "Probe": 0.9998031883487503,
+        "WebAttack": 0.990506329113924
+      }
+    },
+    {
+      "fold": 2,
+      "n_train": 320575,
+      "n_val": 80144,
+      "macro_f1": 0.981087916939436,
+      "per_class_f1": {
+        "Bot": 1.0,
+        "BruteForce": 1.0,
+        "DoS": 0.9998354240573456,
+        "Heartbleed": 1.0,
+        "Infiltration": 0.8888888888888888,
+        "Probe": 0.9998250830855344,
+        "WebAttack": 0.9790660225442834
+      }
+    },
+    {
+      "fold": 3,
+      "n_train": 320575,
+      "n_val": 80144,
+      "macro_f1": 0.9983265996580509,
+      "per_class_f1": {
+        "Bot": 1.0,
+        "BruteForce": 0.9997489329651017,
+        "DoS": 0.9998628521271635,
+        "Heartbleed": 1.0,
+        "Infiltration": 1.0,
+        "Probe": 0.9998031883487503,
+        "WebAttack": 0.9888712241653418
+      }
+    },
+    {
+      "fold": 4,
+      "n_train": 320575,
+      "n_val": 80144,
+      "macro_f1": 0.9827166129980031,
+      "per_class_f1": {
+        "Bot": 1.0,
+        "BruteForce": 1.0,
+        "DoS": 0.9999177112762981,
+        "Heartbleed": 1.0,
+        "Infiltration": 0.8888888888888888,
+        "Probe": 0.9998250754362181,
+        "WebAttack": 0.9903846153846154
+      }
+    },
+    {
+      "fold": 5,
+      "n_train": 320576,
+      "n_val": 80143,
+      "macro_f1": 0.9822682223097386,
+      "per_class_f1": {
+        "Bot": 1.0,
+        "BruteForce": 1.0,
+        "DoS": 0.9998994248932532,
+        "Heartbleed": 1.0,
+        "Infiltration": 0.8888888888888888,
+        "Probe": 0.9998687951016838,
+        "WebAttack": 0.987220447284345
+      }
+    }
+  ],
+  "mean_macro_f1": 0.9859016673193193,
+  "std_macro_f1": 0.007097992247071081,
+  "evaluated_at": "2026-04-17T16:25:01.799019+00:00"
+}

@@ -107,9 +107,13 @@ Configuration: latent_dim=32, hidden_dims=(256, 128), beta_max=1.0, MSE scoring,
 
 | Metric | Value |
 |---|---|
-| Macro F1 | ~0.93 |
-| Weighted F1 | ~1.00 |
+| Macro F1 (test set) | ~0.93 |
+| Weighted F1 (test set) | ~1.00 |
 | Novel anomaly rate | ~0.01% |
+| CV macro F1 mean (5-fold) | 0.9859 |
+| CV macro F1 std (5-fold) | 0.0071 |
+
+5-fold stratified CV was run on the training split only (n=400,719). The tight std of 0.0071 confirms results are stable across splits and not an artefact of a favourable random seed. Infiltration is the only volatile class across folds, expected given only 36 training samples.
 
 ### Cost-weighted analysis
 
