@@ -67,7 +67,7 @@ The dataset was purpose-built for IDS development and evaluation, making it dire
 
 ## Experiment log
 
-All experiments changed one variable against the locked baseline. Three sweeps returned negative results, confirming the baseline is well-tuned.
+All experiments changed one variable against the locked baseline. Four sweeps returned negative results, confirming the baseline is well-tuned.
 
 ### Stage 1 - VAE experiments
 
@@ -107,8 +107,8 @@ Configuration: latent_dim=32, hidden_dims=(256, 128), beta_max=1.0, MSE scoring,
 
 | Metric | Value |
 |---|---|
-| Macro F1 (test set) | ~0.93 |
-| Weighted F1 (test set) | ~1.00 |
+| Macro F1 (test set) | 0.93 |
+| Weighted F1 (test set) | ≈1.00 |
 | Novel anomaly rate | ~0.01% |
 | CV macro F1 mean (5-fold) | 0.9859 |
 | CV macro F1 std (5-fold) | 0.0071 |
