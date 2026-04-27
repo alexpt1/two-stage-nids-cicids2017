@@ -59,6 +59,8 @@ def evaluate_vae_cicids2017(
     device: str | None = None,
     scoring: str = "mse",
 ):
+    #Score the VAE on the test split, calibrate or reuse a threshold, and write metrics.json to run_dir.
+    
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")

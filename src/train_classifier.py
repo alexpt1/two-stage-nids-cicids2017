@@ -3,12 +3,10 @@ import pickle
 import argparse
 from datetime import datetime, timezone
 from pathlib import Path
-
 import numpy as np
 import torch
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
-
 from data_utils import load_cicids2017_raw
 from data_utils_stage2 import load_stage2_data
 
@@ -23,6 +21,8 @@ def train_classifier(
     val_size: float = 0.1,
     test_size: float = 0.2,
 ):
+    #Train a Random Forest on Stage 1-preprocessed attack data and save model, label encoder, and config to a timestamped run directory.
+    
     run_id = "clf_" + datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_dir = Path(outputs_root) / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -69,7 +69,6 @@ def train_classifier(
             raise ImportError("xgboost is not installed. Run: pip install xgboost")
         clf = XGBClassifier(
             n_estimators=n_estimators,
-            use_label_encoder=False,
             eval_metric="mlogloss",
             random_state=random_state,
             n_jobs=-1,

@@ -13,7 +13,7 @@ from thresholding import load_threshold
 
 
 COST_WEIGHTS = {
-    "DoS":          20, # Updated from 10, so that it can reach HIGH severity
+    "DoS":          20, #Updated from 10, so that it can reach HIGH severity
     "Probe":         5,
     "BruteForce":   15,
     "WebAttack":    20,
@@ -70,6 +70,8 @@ def explain_predictions(
     random_state: int = 42,
     device: str = "cpu",
 ):
+    #Run the two-stage pipeline on attack-day data and produce stratified SHAP explanations with severity verdicts.
+    
     vae_run_path   = Path(vae_run_dir)
     vae_model_path = vae_run_path / "model.pt"
     threshold_path = vae_run_path / "threshold.json"

@@ -11,7 +11,6 @@ from torch.utils.data import TensorDataset, DataLoader
 
 LABEL_COL = "Label"
 DROP_COLS = ["Fwd Header Length.1"]
-
 BENIGN_LABEL = "BENIGN"
 
 
@@ -67,18 +66,10 @@ def audit_features(
     variance_floor: float = VARIANCE_FLOOR,
     skew_threshold: float = SKEW_THRESHOLD,
 ):
-    """
-    Audit features on a reference DataFrame (Monday normal traffic).
-    1. Drop columns with variance < variance_floor (near-constant).
-    2. Identify columns with |skew| > skew_threshold for log1p transform.
-
-    Returns:
-        surviving_cols:      list of column names kept after dropping low-variance
-        log_transform_cols:  list of column names that need log1p transform
-        audit_report:        dict with full audit details for logging
-    """
+    #Audits reference DataFrame: drops low-variance cols, flags high-skew cols for log1p; returns surviving_cols, log_transform_cols, audit_report.
     X = df_reference[feature_cols]
-
+    
+    #Drop near-zero-variance columns and flag high-skew columns for log1p; returns surviving_cols, log_transform_cols, audit_report.
     variances = X.var()
     low_var_mask = variances < variance_floor
     dropped_cols = list(variances[low_var_mask].index)
@@ -125,14 +116,10 @@ def apply_feature_transforms(
     surviving_cols: list,
     log_transform_cols: list,
 ) -> np.ndarray:
-    """
-    Apply the audit-determined transforms to any DataFrame:
-    1. Select only surviving columns.
-    2. log1p-transform the identified columns.
-    Returns a float32 numpy array.
-    """
+    #Select surviving cols, apply log1p transforms, and returns a float32 numpy array.
     X = df[surviving_cols].copy()
     for col in log_transform_cols:
+        #Clipping negatives to 0 before log1p silently masks negative feature values. Caller must be aware this is lossy for features with legitimate negative values post-scaling.
         X[col] = np.log1p(X[col].clip(lower=0))
     return X.values.astype(np.float32)
 
@@ -142,11 +129,9 @@ def compute_clip_bounds(
     lower_pct: float = CLIP_LOWER_PCT,
     upper_pct: float = CLIP_UPPER_PCT,
 ):
-    """
-    Compute per-column clip bounds from reference data (Monday normal traffic).
-    Returns two 1D arrays (lower, upper) of length n_features.
-    """
+    #Compute per-column clip bounds (lower, upper) from reference data; return two 1D arrays of length n_features.
     lower = np.percentile(X, lower_pct, axis=0).astype(np.float32)
+    #Risk: Bounds computed on raw (pre-scale) Monday data but applied after scaler.transform() in some call sites - verify clip is always applied before scaling, not after.
     upper = np.percentile(X, upper_pct, axis=0).astype(np.float32)
     n_clipped_cols = int((upper > lower).sum())
     print(f"  Outlier clipping: bounds computed on Monday "
@@ -155,9 +140,7 @@ def compute_clip_bounds(
 
 
 def apply_clip(X: np.ndarray, lower: np.ndarray, upper: np.ndarray) -> np.ndarray:
-    """
-    Clip each column of X to the provided per-column bounds.
-    """
+    #Clip each column of X to the provided per-column bounds.
     return np.clip(X, lower, upper).astype(np.float32)
 
 

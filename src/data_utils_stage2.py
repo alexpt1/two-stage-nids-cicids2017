@@ -2,9 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-
 from data_utils import apply_feature_transforms, apply_clip, LABEL_COL, BENIGN_LABEL
-
 
 ATTACK_CATEGORY_MAP = {
     "BENIGN": "benign",
@@ -41,6 +39,7 @@ def load_stage2_data(
     test_size: float = 0.2,
     random_state: int = 42,
 ):
+    #Map attack labels to categories, apply Stage 1 transforms, split into train/val/test, return arrays and fitted LabelEncoder.
     surviving_cols     = feature_meta["surviving_cols"]
     log_transform_cols = feature_meta["log_transform_cols"]
     clip_lower         = np.asarray(feature_meta["clip_lower"], dtype=np.float32)
@@ -71,7 +70,7 @@ def load_stage2_data(
     class_counts = pd.Series(y_raw).value_counts()
     too_rare_for_stratify = class_counts[class_counts < 3].index.tolist()
     if too_rare_for_stratify:
-        print(f"Note: classes with <3 samples cannot be stratified safely: {too_rare_for_stratify}")
+        print(f"Note: classes with < 3 samples cannot be stratified safely: {too_rare_for_stratify}")
         print("Falling back to non-stratified split.")
         stratify_outer = None
     else:

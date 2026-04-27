@@ -49,6 +49,7 @@ def compute_cost_weighted_detection(
         cost = attack_costs.get(cls, 1)
         if cm_matrix:
             row = cm_matrix[i]
+            #Assumes cm is a square list-of-lists with consistent indexing matching classes. If confusion_matrix was generated with a subset of labels (as in evaluate_classifier.py with present_labels), this silently produces wrong FN counts. Verify confusion_matrix is generated with the full set of classes for accurate cost computation.
             fn_count = sum(row) - row[i]
         else:
             fn_count = 0

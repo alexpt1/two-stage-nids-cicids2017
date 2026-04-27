@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class VAE(nn.Module):
     def __init__(self, input_dim: int, latent_dim: int = 16, hidden_dims=(256, 128)):
         super().__init__()
-
+        #Encoder: stack Linear->ReLU pairs, output feeds fc_mu and fc_logvar separately
         encoder_layers = []
         last_dim = input_dim
         for h_dim in hidden_dims:
@@ -18,7 +18,7 @@ class VAE(nn.Module):
         self.fc_mu = nn.Linear(last_dim, latent_dim)
         self.fc_logvar = nn.Linear(last_dim, latent_dim)
 
-        
+        #Decoder: mirrors encoder in reverse, no activation on final layer (unbounded output)
         decoder_layers = []
         last_dim = latent_dim
         for h_dim in reversed(hidden_dims):
@@ -32,7 +32,7 @@ class VAE(nn.Module):
     def encode(self, x):
         h = self.encoder(x)
         mu = self.fc_mu(h)
-        logvar = torch.clamp(self.fc_logvar(h), min=-4.0, max=4.0)
+        logvar = torch.clamp(self.fc_logvar(h), min=-4.0, max=4.0) #clamp prevents exploding variance
         return mu, logvar
 
     def reparameterize(self, mu, logvar):
@@ -54,8 +54,8 @@ class VAE(nn.Module):
 def vae_loss_function(x_recon, x, mu, logvar, beta=1.0):
     recon_loss = F.mse_loss(x_recon, x, reduction="mean")
     kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-    kl_free = torch.clamp(kl_per_dim, min=0.5)
+    kl_free = torch.clamp(kl_per_dim, min=0.5) #free bits: ignore KL < 0.5 nats per dim to prevent posterior collapse
     kl = kl_free.sum(dim=1).mean()
-    kl /= x.size(0)
+    kl /= x.size(0) #normalise by batch size to keep scale consistent with recon_loss
     loss = recon_loss + beta * kl
     return loss, recon_loss, kl

@@ -48,6 +48,7 @@ def evaluate_classifier(
         )
 
     with model_path.open("rb") as f:
+        #Security concern: pickle.load from an untrusted path allows arbitrary code execution. Acceptable for research; never do this in production without integrity verification.
         payload = pickle.load(f)
         clf = payload["clf"] if isinstance(payload, dict) else payload
 

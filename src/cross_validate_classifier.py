@@ -24,6 +24,7 @@ def cross_validate_classifier(
     val_size: float = 0.1,
     test_size: float = 0.2,
 ):
+    #Run stratified k-fold CV on the training split and save per-fold and summary metrics to cv_metrics.json.
     clf_run_path = Path(clf_run_dir)
     clf_run_path.mkdir(parents=True, exist_ok=True)
 
@@ -66,6 +67,7 @@ def cross_validate_classifier(
         X_tr, X_va = X_train[tr_idx], X_train[va_idx]
         y_tr, y_va = y_train[tr_idx], y_train[va_idx]
 
+        #class_weight="balanced" recomputes weights per fold subset, not on the full training distribution - can produce inconsistent weighting across folds if class proportions vary significantly.
         clf = RandomForestClassifier(
             n_estimators=n_estimators,
             class_weight="balanced",
